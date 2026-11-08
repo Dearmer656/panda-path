@@ -1,0 +1,23 @@
+#!/bin/bash
+#SBATCH --job-name=p318_full
+#SBATCH --output=pat318/logs/%j_full.txt
+#SBATCH --partition=gpu_long
+#SBATCH --gres=gpu:6000:2
+#SBATCH --exclude=elm11,elm12,elm13,elm14,elm15,elm21,elm22,elm23,elm24,elm25,elm26,elm74,elm41,elm42
+#SBATCH --cpus-per-task=16
+#SBATCH --mem=120G
+#SBATCH --time=4-00:00:00
+# PAT-318 full run: usage sbatch pat318/full.sbatch ARM SEED
+# Official recipe = 4 GPUs x per-device 1024 (global 4096) x 100k steps. Here 2 GPUs x 1024 x grad-accum 2 = the same
+# global batch 4096 and the same 100k optimizer steps / lr schedule. Then official eval at ctx 512 (K1/K2) and 1024/2048 (K3).
+ARM=$1; SEED=$2
+cd /project/nlp-work5/hongyu-s/state_path_attn/panda
+RUN=p318_${ARM}_s${SEED}_st100000
+bash pat318/train.sh $ARM $SEED 100000 0,1 train.gradient_accumulation_steps=2 train.dataloader_num_workers=6 > pat318/logs/${SLURM_JOB_ID}_train_${RUN}.txt 2>&1
+CK=$(ls -d pat318/ckpt/${RUN}-*/checkpoint-final | tail -1)
+echo "checkpoint: $CK"
+[ -d "$CK" ] || exit 1
+ev() { P318_CTX=$1 P318_EVAL_SCRIPT=pat318/evaluate_wrap.py bash pat318/eval.sh $CK ${RUN}_ctx$1 $2 > pat318/logs/${SLURM_JOB_ID}_eval_${RUN}_ctx$1.txt 2>&1; }
+ev 512 0 & ev 1024 1 & wait
+ev 2048 0
+echo done

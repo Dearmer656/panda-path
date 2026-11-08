@@ -10,7 +10,7 @@ ulimit -n 99999
 CUDA_VISIBLE_DEVICES=$GPUS .venv/bin/torchrun --nproc-per-node $NG --master-port $PORT scripts/panda/train.py \
     run_name=p318_${ARM}_s${SEED}_st${STEPS} \
     wandb.log=false \
-    train_data_dirs='["data/final_skew40/train"]' \
+    train_data_dirs='["data/final_skew40/train","data/final_base40/train"]' \
     shuffle_buffer_length=100_000 min_past=60 max_missing_prop=0.9 fixed_dim=3 \
     augmentations.augmentation_rate=0.2 \
     'augmentations.probabilities=[0.3333333333333333,0.3333333333333333,0.3333333333333333,0.0,0.0]' \
