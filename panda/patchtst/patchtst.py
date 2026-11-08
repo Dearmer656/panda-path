@@ -22,6 +22,7 @@ from transformers.models.patchtst.modeling_patchtst import (
 )
 from transformers.utils import ModelOutput
 
+from .path_pos import bidir_path_scores
 from .modules import (
     DyT,
     PatchTSTKernelEmbedding,
@@ -77,8 +78,17 @@ class PatchTSTRopeAttention(nn.Module):
         rope_percent: float = 0.5,
         linear_attn: bool = False,
         config: PatchTSTConfig | None = None,
+        pos: str | None = None,
     ):
         super().__init__()
+        # PAT-318: pos in rope | nope | path | rope_path (None -> follow use_rope, the official behaviour)
+        pos = pos or ("rope" if use_rope else "nope")
+        assert pos in ("rope", "nope", "path", "rope_path"), pos
+        self.pos = pos
+        use_rope = "rope" in pos
+        if "path" in pos:  # PaTH: w_t, beta_t from the attention layer input (bidirectional, see path_pos.py)
+            self.w_proj = nn.Linear(embed_dim, embed_dim, bias=bias)
+            self.beta_proj = nn.Linear(embed_dim, num_heads, bias=bias)
         self.embed_dim = embed_dim
         self.num_heads = num_heads
         self.dropout = dropout
@@ -189,7 +199,12 @@ class PatchTSTRopeAttention(nn.Module):
                 self.rope_percent,
             )
 
-        attn_weights = torch.bmm(query_states, key_states.transpose(1, 2))
+        if "path" in self.pos:
+            w = nn.functional.normalize(self._shape(self.w_proj(hidden_states), -1, bsz).view(*proj_shape), dim=-1)
+            beta = 2 * torch.sigmoid(self.beta_proj(hidden_states)).transpose(1, 2).reshape(bsz * self.num_heads, -1)
+            attn_weights = bidir_path_scores(query_states, key_states, w.to(query_states.dtype), beta.to(query_states.dtype))
+        else:
+            attn_weights = torch.bmm(query_states, key_states.transpose(1, 2))
 
         if attn_weights.size() != (bsz * self.num_heads, tgt_len, src_len):
             raise ValueError(
@@ -276,6 +291,7 @@ class PatchTSTEncoderLayerWithRope(nn.Module):
             use_rope=True,
             max_wavelength=config.max_wavelength,
             rope_percent=config.rope_percent,
+            pos=getattr(config, "temporal_pos", "rope"),
         )
         if self.channel_attention:
             self.channel_self_attn = PatchTSTRopeAttention(
