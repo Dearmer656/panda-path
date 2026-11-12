@@ -8,7 +8,7 @@ PORT=$((29500 + RANDOM % 2000))
 export WANDB_MODE=disabled PYTHONWARNINGS=ignore OMP_NUM_THREADS=4
 ulimit -n 99999
 CUDA_VISIBLE_DEVICES=$GPUS .venv/bin/torchrun --nproc-per-node $NG --master-port $PORT scripts/panda/train.py \
-    run_name=p318_${ARM}_s${SEED}_st${STEPS} \
+    run_name=${P318_PREFIX:-p318}_${ARM}_s${SEED}_st${STEPS} \
     wandb.log=false \
     train_data_dirs='["data/final_skew40/train","data/final_base40/train"]' \
     shuffle_buffer_length=100_000 min_past=60 max_missing_prop=0.9 fixed_dim=3 \
@@ -16,7 +16,7 @@ CUDA_VISIBLE_DEVICES=$GPUS .venv/bin/torchrun --nproc-per-node $NG --master-port
     'augmentations.probabilities=[0.3333333333333333,0.3333333333333333,0.3333333333333333,0.0,0.0]' \
     patchtst.mode=predict patchtst.context_length=512 patchtst.prediction_length=128 \
     patchtst.patch_length=16 patchtst.patch_stride=16 patchtst.num_hidden_layers=8 patchtst.d_model=512 \
-    patchtst.num_attention_heads=8 patchtst.ffn_dim=512 patchtst.channel_attention=true patchtst.norm_type=rmsnorm \
+    patchtst.num_attention_heads=8 patchtst.ffn_dim=512 patchtst.channel_attention=${P318_CHATTN:-true} patchtst.norm_type=rmsnorm \
     patchtst.pooling_type=mean patchtst.loss=mse patchtst.distribution_output=null \
     patchtst.max_wavelength=500 patchtst.rope_percent=0.75 patchtst.channel_rope=false \
     patchtst.use_dynamics_embedding=true patchtst.num_poly_feats=120 patchtst.poly_degrees=2 \
