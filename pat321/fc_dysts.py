@@ -368,12 +368,8 @@ def target(se, rows, t, b, H):
     return (y - b['cm'][:, None]) / b['cs'][:, None]
 
 
-def run_train(a, dev):
-    d, se = load_set('train', dev)
-    H, arm = a.H, a.arm
-    nq = len(d['rows']); g = torch.Generator().manual_seed(a.seed)
-    sel = torch.randperm(nq, generator=g)[:a.n_q]
-    # eps_q and normaliser statistics
+def untrained_eps(se, d, sel, H, dev):
+    """eps_q = MSE of the untrained rule (mean of the top-20 shape readouts); drops queries without candidates."""
     eps, zs, us, keep = [], [], [], []
     with torch.no_grad():
         for i in range(0, len(sel), 512):
@@ -386,16 +382,41 @@ def run_train(a, dev):
             keep.append(b['any'].cpu())
             zs.append(b['z'][b['valid']][::7].cpu()); us.append(b['u'].cpu())
     eps = torch.cat(eps); keep = torch.cat(keep)
-    sel, eps = sel[keep], eps[keep]
+    return sel[keep], eps[keep], zs, us
+
+
+@torch.no_grad()
+def eval_loss(model, se, d, sel, eps, H, dev, arm, bs=512):
+    """training objective on held-out queries (clipped normalised MSE)."""
+    model.eval(); tot = 0.0
+    for i in range(0, len(sel), bs):
+        idx = sel[i:i + bs]
+        rows, t, b, ex = batch_inputs(se, d, idx, H, dev, arm)
+        R = readout(se, rows, t, b, H); y = target(se, rows, t, b, H)
+        r = (model(b, **ex)[..., None] * R).sum(1)
+        tot += float(((r - y).square().mean(1) / eps[i:i + bs].to(dev)).clamp_max(C_MAX).sum())
+    model.train()
+    return tot / len(sel)
+
+
+def run_train(a, dev):
+    d, se = load_set('train', dev)
+    H, arm = a.H, a.arm
+    nq = len(d['rows']); g = torch.Generator().manual_seed(a.seed)
+    sel = torch.randperm(nq, generator=g)[:a.n_q]
+    # eps_q and normaliser statistics
+    sel, eps, zs, us = untrained_eps(se, d, sel, H, dev)
+    dv, sv = load_set('val', dev)
+    vsel, veps, _, _ = untrained_eps(sv, dv, torch.arange(len(dv['rows'])), H, dev)
     torch.manual_seed(a.seed)
     model = Scorer(arm).to(dev)
     zv, uv = torch.cat(zs), torch.cat(us)
     model.zm.copy_(zv.mean(0)); model.zs.copy_(zv.std(0).clamp_min(1e-3)); model.um.copy_(uv.mean(0)); model.us.copy_(uv.std(0).clamp_min(1e-3))
     ema = copy.deepcopy(model)
-    opt = torch.optim.AdamW(model.parameters(), lr=LR, weight_decay=WD)
+    opt = torch.optim.AdamW(model.parameters(), lr=LR, weight_decay=a.wd)
     n_step = math.ceil(len(sel) / BATCH)
     sched = torch.optim.lr_scheduler.CosineAnnealingLR(opt, EPOCHS * n_step)
-    hist = []
+    hist, vhist, best = [], [], (math.inf, -1, None)
     print(f'[train] arm {arm} H {H}: {len(sel)} queries, {n_step} steps/epoch', flush=True)
     for ep in range(EPOCHS):
         perm = torch.randperm(len(sel), generator=g); tot = 0.0; t0 = time.time()
@@ -411,14 +432,21 @@ def run_train(a, dev):
                     pe.mul_(EMA).add_(pm, alpha=1 - EMA)
             tot += float(loss.detach())
         hist.append(tot / n_step)
-        print(f'[train] arm {arm} H {H} epoch {ep} loss {hist[-1]:.4f} {time.time() - t0:.0f}s' + (f' gamma {float(model.gamma):.3f}' if arm != 'fc' else ''), flush=True)
-    torch.save(dict(state=ema.state_dict(), hist=hist), OUT / f'scorer_{arm}_H{H}_s{a.seed}.pt')
+        vl = eval_loss(ema, sv, dv, vsel, veps, H, dev, arm) if a.tag else float('nan'); vhist.append(vl)
+        if a.tag and vl < best[0]:
+            best = (vl, ep, copy.deepcopy(ema.state_dict()))
+        print(f'[train] arm {arm} H {H} epoch {ep} loss {hist[-1]:.4f} val {vl:.4f} {time.time() - t0:.0f}s' + (f' gamma {float(model.gamma):.3f}' if arm != 'fc' else ''), flush=True)
+    if a.tag:
+        print(f'[train] arm {arm} H {H} wd {a.wd}: best val {best[0]:.4f} at epoch {best[1]}', flush=True)
+        torch.save(dict(state=best[2], hist=hist, vhist=vhist, best_val=best[0], best_ep=best[1], wd=a.wd), OUT / f'scorer_{arm}_H{H}_s{a.seed}{a.tag}.pt')
+    else:
+        torch.save(dict(state=ema.state_dict(), hist=hist), OUT / f'scorer_{arm}_H{H}_s{a.seed}.pt')
 
 
 @torch.no_grad()
-def predict_set(name, arm, H, seed, dev, bs=256):
+def predict_set(name, arm, H, seed, dev, bs=256, fname=None):
     d, se = load_set(name, dev)
-    model = Scorer(arm).to(dev); model.load_state_dict(torch.load(OUT / f'scorer_{arm}_H{H}_s{seed}.pt')['state']); model.eval()
+    model = Scorer(arm).to(dev); model.load_state_dict(torch.load(OUT / (fname or f'scorer_{arm}_H{H}_s{seed}.pt'))['state']); model.eval()
     rs, ys, fs = [], [], []
     for i in range(0, len(d['rows']), bs):
         idx = torch.arange(i, min(i + bs, len(d['rows'])))
@@ -453,11 +481,17 @@ def run_test(a, dev):
     res = dict(arms={}, w={})
     for H in [int(x) for x in a.Hs.split(',')]:
         for arm in a.arms.split(','):
-            dv, rv, yv, fv = predict_set('val', arm, H, a.seed, dev)
+            fname = None
+            if a.tags:   # model selection: weight decay and epoch with the lowest held-out (val) loss
+                cands = [(torch.load(OUT / f'scorer_{arm}_H{H}_s{a.seed}{tg}.pt')['best_val'], tg) for tg in a.tags.split(',')]
+                bv, tg = min(cands); fname = f'scorer_{arm}_H{H}_s{a.seed}{tg}.pt'
+                ck = torch.load(OUT / fname); res.setdefault('sel', {})[f'{arm}_H{H}'] = dict(tag=tg, wd=ck['wd'], ep=ck['best_ep'], val_loss=bv, all={t: float(v) for v, t in cands})
+                print(f'[select] {arm} H{H}: {tg} wd {ck["wd"]} epoch {ck["best_ep"]} val loss {bv:.4f} | ' + ' '.join(f'{t}:{v:.4f}' for v, t in cands), flush=True)
+            dv, rv, yv, fv = predict_set('val', arm, H, a.seed, dev, fname=fname)
             dl = rv - fv; err = yv - fv
             w = float(((err * dl).sum() / dl.square().sum().clamp_min(1e-12)).clamp(0, 1))
             res['w'][f'{arm}_H{H}'] = w
-            dt, rt, yt, ft = predict_set('test', arm, H, a.seed, dev)
+            dt, rt, yt, ft = predict_set('test', arm, H, a.seed, dev, fname=fname)
             n = dt['n_inst']; ids = dt['ids']
             base = smape_traj(ft, yt, ids, dt['inst']); comb = smape_traj(ft + w * (rt - ft), yt, ids, dt['inst']); ronly = smape_traj(rt, yt, ids, dt['inst'])
             vb = smape_traj(fv, yv, dv['ids'], dv['inst']); vc = smape_traj(fv + w * (rv - fv), yv, dv['ids'], dv['inst'])
@@ -467,8 +501,8 @@ def run_test(a, dev):
                                               test_win_frac=float((comb < base).double().mean()))
             print(f'[test] {arm} H{H}: w {w:.3f} | test sMAPE base {base.median():.3f} comb {comb.median():.3f} r-only {ronly.median():.3f} '
                   f'| val base {vb.median():.3f} comb {vc.median():.3f}', flush=True)
-            torch.save(dict(base=base, comb=comb, r=ronly), OUT / f'inst_{arm}_H{H}_s{a.seed}.pt')
-    json.dump(res, open(OUT / f'results_s{a.seed}.json', 'w'), indent=1)
+            torch.save(dict(base=base, comb=comb, r=ronly), OUT / f'inst_{arm}_H{H}_s{a.seed}{a.out_tag}.pt')
+    json.dump(res, open(OUT / f'results_s{a.seed}{a.out_tag}.json', 'w'), indent=1)
 
 
 def run_check(a, dev):
@@ -494,6 +528,8 @@ if __name__ == '__main__':
     ap.add_argument('--arm', default='fc'); ap.add_argument('--arms', default='fc,bil,path')
     ap.add_argument('--H', type=int, default=128); ap.add_argument('--n_q', type=int, default=32000)
     ap.add_argument('--seed', type=int, default=99); ap.add_argument('--Hs', default='128,256,512')
+    ap.add_argument('--wd', type=float, default=WD); ap.add_argument('--tag', default='')
+    ap.add_argument('--tags', default=''); ap.add_argument('--out_tag', default='')
     a = ap.parse_args()
     dev = torch.device('cuda')
     OUT.mkdir(parents=True, exist_ok=True)
