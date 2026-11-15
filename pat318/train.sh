@@ -21,7 +21,7 @@ CUDA_VISIBLE_DEVICES=$GPUS .venv/bin/torchrun --nproc-per-node $NG --master-port
     patchtst.max_wavelength=500 patchtst.rope_percent=0.75 patchtst.channel_rope=false \
     patchtst.use_dynamics_embedding=true patchtst.num_poly_feats=120 patchtst.poly_degrees=2 \
     patchtst.rff_trainable=false patchtst.rff_scale=1.0 patchtst.num_rff=256 \
-    patchtst.temporal_pos=$ARM \
+    patchtst.temporal_pos=${P318_POS:-$ARM} \
     train.seed=$SEED train.max_steps=$STEPS train.save_steps=50_000 train.log_steps=100 \
     train.per_device_train_batch_size=1024 train.learning_rate=1e-3 train.lr_scheduler_type=cosine \
     train.warmup_ratio=0.1 train.weight_decay=0.0 train.max_grad_norm=1.0 train.tf32=false train.torch_compile=true \

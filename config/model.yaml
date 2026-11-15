@@ -44,6 +44,8 @@ patchtst:
   max_wavelength: 500
   rope_percent: 0.75
   temporal_pos: rope  # PAT-318: rope | nope | path | rope_path
+  encoder_type: transformer  # PAT-318 control: transformer | lstm
+  lstm_layers: 6
 
   # for initializing the encoder from an mlm checkpoint
   pretrained_encoder_path: null

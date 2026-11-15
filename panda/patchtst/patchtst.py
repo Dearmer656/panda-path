@@ -494,12 +494,19 @@ class PatchTSTEncoder(PatchTSTPreTrainedModel):
         else:
             self.embedder = PatchTSTEmbedding(config)
 
-        self.layers = nn.ModuleList(
-            [
-                PatchTSTEncoderLayerWithRope(config)
-                for i in range(config.num_hidden_layers)
-            ]
-        )
+        # PAT-318 LSTM control: encoder_type = lstm replaces the transformer stack by a unidirectional stacked LSTM
+        # over each channel's patch sequence (same patch / dynamics embedding, same head); lstm_layers sets the depth
+        self.encoder_type = getattr(config, "encoder_type", "transformer")
+        if self.encoder_type == "lstm":
+            self.lstm = nn.LSTM(config.d_model, config.d_model, num_layers=getattr(config, "lstm_layers", 6), batch_first=True)
+            self.layers = nn.ModuleList()
+        else:
+            self.layers = nn.ModuleList(
+                [
+                    PatchTSTEncoderLayerWithRope(config)
+                    for i in range(config.num_hidden_layers)
+                ]
+            )
 
         # Initialize weights and apply final processing
         self.post_init()
@@ -538,6 +545,11 @@ class PatchTSTEncoder(PatchTSTPreTrainedModel):
 
         encoder_states = () if output_hidden_states else None
         all_attentions = () if output_attentions else None
+
+        if self.encoder_type == "lstm":
+            bs, nc, npch, dm = hidden_state.shape
+            out, _ = self.lstm(hidden_state.reshape(bs * nc, npch, dm))
+            return BaseModelOutput(last_hidden_state=out.reshape(bs, nc, npch, dm), hidden_states=None, attentions=None)
 
         for encoder_layer in self.layers:
             if output_hidden_states:
@@ -888,6 +900,9 @@ class PatchTSTPredictionHead(nn.Module):
             if self.pooling_type == "mean":
                 # pooled_embedding: [bs x num_channels x d_model]
                 pooled_embedding = embedding.mean(dim=2)
+            elif self.pooling_type == "last":
+                # PAT-318 LSTM control: final recurrent state
+                pooled_embedding = embedding[:, :, -1, :]
             elif self.pooling_type == "max":
                 # pooled_embedding: [bs x num_channels x d_model]
                 pooled_embedding = embedding.max(dim=2).values

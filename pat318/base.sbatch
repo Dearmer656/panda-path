@@ -13,7 +13,7 @@
 ARM=$1; SEED=$2
 cd /project/nlp-work5/hongyu-s/state_path_attn/panda
 RUN=${P318_PREFIX:-p318}_${ARM}_s${SEED}_st100000
-bash pat318/train.sh $ARM $SEED 100000 0,1 train.gradient_accumulation_steps=2 train.dataloader_num_workers=6 > pat318/logs/${SLURM_JOB_ID}_train_${RUN}.txt 2>&1
+bash pat318/train.sh $ARM $SEED 100000 0,1 train.gradient_accumulation_steps=2 train.dataloader_num_workers=6 $P318_EXTRA > pat318/logs/${SLURM_JOB_ID}_train_${RUN}.txt 2>&1
 CK=$(ls -d pat318/ckpt/${RUN}-*/checkpoint-final | tail -1)
 echo "checkpoint: $CK"
 [ -d "$CK" ] || exit 1
