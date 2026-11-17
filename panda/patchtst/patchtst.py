@@ -83,7 +83,7 @@ class PatchTSTRopeAttention(nn.Module):
         super().__init__()
         # PAT-318: pos in rope | nope | path | rope_path (None -> follow use_rope, the official behaviour)
         pos = pos or ("rope" if use_rope else "nope")
-        assert pos in ("rope", "nope", "path", "rope_path", "fox"), pos
+        assert pos in ("rope", "nope", "path", "rope_path", "fox", "mamba3"), pos
         self.pos = pos
         use_rope = "rope" in pos
         if "path" in pos:  # PaTH: w_t, beta_t from the attention layer input (bidirectional, see path_pos.py)
@@ -110,6 +110,10 @@ class PatchTSTRopeAttention(nn.Module):
         self.is_decoder = is_decoder
         self.is_causal = is_causal
 
+        if pos == "mamba3":  # PAT-318 control: the temporal attention is replaced by official Mamba-3 (bidirectional, tied)
+            from .mamba3_mixer import BiMamba3
+            self.mamba3 = BiMamba3(embed_dim)
+            return
         self.k_proj = nn.Linear(embed_dim, embed_dim, bias=bias)
         self.v_proj = nn.Linear(embed_dim, embed_dim, bias=bias)
         self.q_proj = nn.Linear(embed_dim, embed_dim, bias=bias)
@@ -135,6 +139,8 @@ class PatchTSTRopeAttention(nn.Module):
         output_attentions: bool = False,
     ) -> tuple[torch.Tensor, torch.Tensor | None, tuple[torch.Tensor] | None]:
         """Input shape: Batch x Time x Channel"""
+        if self.pos == "mamba3":
+            return self.mamba3(hidden_states), None, None
 
         # if key_value_states are provided this layer is used as a cross-attention layer
         # for the decoder
