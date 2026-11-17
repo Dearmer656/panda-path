@@ -1,0 +1,44 @@
+systems 262, dims {3: 223, 4: 36, 5: 1, 6: 1, 10: 1}
+
+=== lead h=1
+[A] top-1 EV median 0.563 (isotropic 1/D median 0.333); top-2 0.861; top-5 1.000; erank/D median 0.807; erank median 2.57; |mu| median 0.015; |mu|^2/trC median 0.0068  -> concentrated False
+    D=3 (n=223): eig frac median 0.596 0.269 0.118 | erank 2.43
+    D=4 (n=36): eig frac median 0.514 0.240 0.151 0.095 | erank 3.25
+[B] k=1 (n=262): S(A,B) 0.802 S(A,V) 0.649 S(B,V) 0.750 | random k/D 0.333 (empirical 0.331) | median S(A,V)-k/D CI [+0.193,+0.455]  -> stable False
+[B] k=2 (n=262): S(A,B) 0.823 S(A,V) 0.850 S(B,V) 0.883 | random k/D 0.667 (empirical 0.666) | median S(A,V)-k/D CI [+0.140,+0.241]
+[B] k=5 (n=2): S(A,B) 0.731 S(A,V) 0.779 S(B,V) 0.802 | random k/D 0.667 (empirical 0.666) | median S(A,V)-k/D CI [+0.070,+0.155]
+[C] MSE zero 0.3115 mean 0.3138 correct 0.3025 shuf0 0.3145 shuf1 0.3168 shuf2 0.3130
+[C] R2_OOS pooled: zero +0.0076 mean +0.0000 shuffled -0.0031±0.0061 correct +0.0361 | correct-shuffled CI [-0.0149,+0.2107] | per-system median R2 correct +0.0069 shuffled +0.0002 | systems with R2(correct)>0: 0.74  -> predictive False
+
+=== lead h=16
+[A] top-1 EV median 0.553 (isotropic 1/D median 0.333); top-2 0.859; top-5 1.000; erank/D median 0.850; erank median 2.60; |mu| median 0.031; |mu|^2/trC median 0.0020  -> concentrated False
+    D=3 (n=223): eig frac median 0.568 0.292 0.131 | erank 2.56
+    D=4 (n=36): eig frac median 0.470 0.272 0.159 0.089 | erank 3.38
+[B] k=1 (n=262): S(A,B) 0.772 S(A,V) 0.715 S(B,V) 0.731 | random k/D 0.333 (empirical 0.332) | median S(A,V)-k/D CI [+0.321,+0.479]  -> stable True
+[B] k=2 (n=262): S(A,B) 0.873 S(A,V) 0.882 S(B,V) 0.896 | random k/D 0.667 (empirical 0.666) | median S(A,V)-k/D CI [+0.195,+0.263]
+[B] k=5 (n=2): S(A,B) 0.783 S(A,V) 0.714 S(B,V) 0.664 | random k/D 0.667 (empirical 0.665) | median S(A,V)-k/D CI [-0.028,+0.123]
+[C] MSE zero 1.7160 mean 1.7198 correct 1.7285 shuf0 1.7212 shuf1 1.7201 shuf2 1.7196
+[C] R2_OOS pooled: zero +0.0022 mean +0.0000 shuffled -0.0003±0.0005 correct -0.0050 | correct-shuffled CI [-0.0113,+0.0010] | per-system median R2 correct +0.0000 shuffled -0.0001 | systems with R2(correct)>0: 0.53  -> predictive False
+
+=== lead h=64
+[A] top-1 EV median 0.529 (isotropic 1/D median 0.333); top-2 0.837; top-5 1.000; erank/D median 0.869; erank median 2.67; |mu| median 0.061; |mu|^2/trC median 0.0022  -> concentrated False
+    D=3 (n=223): eig frac median 0.542 0.309 0.139 | erank 2.62
+    D=4 (n=36): eig frac median 0.438 0.270 0.186 0.102 | erank 3.43
+[B] k=1 (n=262): S(A,B) 0.655 S(A,V) 0.641 S(B,V) 0.682 | random k/D 0.333 (empirical 0.330) | median S(A,V)-k/D CI [+0.235,+0.427]  -> stable False
+[B] k=2 (n=262): S(A,B) 0.853 S(A,V) 0.870 S(B,V) 0.877 | random k/D 0.667 (empirical 0.665) | median S(A,V)-k/D CI [+0.167,+0.271]
+[B] k=5 (n=2): S(A,B) 0.703 S(A,V) 0.761 S(B,V) 0.703 | random k/D 0.667 (empirical 0.667) | median S(A,V)-k/D CI [-0.026,+0.215]
+[C] MSE zero 14.1515 mean 14.1706 correct 15.0549 shuf0 14.1733 shuf1 14.1709 shuf2 14.2726
+[C] R2_OOS pooled: zero +0.0013 mean +0.0000 shuffled -0.0025±0.0041 correct -0.0624 | correct-shuffled CI [-1.3248,+0.0041] | per-system median R2 correct +0.0001 shuffled -0.0001 | systems with R2(correct)>0: 0.61  -> predictive False
+
+=== lead h=128
+[A] top-1 EV median 0.526 (isotropic 1/D median 0.333); top-2 0.829; top-5 1.000; erank/D median 0.877; erank median 2.70; |mu| median 0.071; |mu|^2/trC median 0.0025  -> concentrated False
+    D=3 (n=223): eig frac median 0.533 0.311 0.147 | erank 2.64
+    D=4 (n=36): eig frac median 0.444 0.251 0.176 0.103 | erank 3.38
+[B] k=1 (n=262): S(A,B) 0.682 S(A,V) 0.619 S(B,V) 0.706 | random k/D 0.333 (empirical 0.332) | median S(A,V)-k/D CI [+0.166,+0.368]  -> stable False
+[B] k=2 (n=262): S(A,B) 0.792 S(A,V) 0.825 S(B,V) 0.852 | random k/D 0.667 (empirical 0.666) | median S(A,V)-k/D CI [+0.134,+0.237]
+[B] k=5 (n=2): S(A,B) 0.783 S(A,V) 0.791 S(B,V) 0.730 | random k/D 0.667 (empirical 0.668) | median S(A,V)-k/D CI [-0.029,+0.277]
+[C] MSE zero 17.3631 mean 17.5821 correct 17.7298 shuf0 17.5551 shuf1 17.5463 shuf2 18.4969
+[C] R2_OOS pooled: zero +0.0125 mean +0.0000 shuffled -0.0162±0.0311 correct -0.0084 | correct-shuffled CI [-0.0522,+0.0152] | per-system median R2 correct +0.0000 shuffled -0.0000 | systems with R2(correct)>0: 0.52  -> predictive False
+
+verdict per lead {"1": {"concentrated": false, "stable": false, "predictive": false}, "16": {"concentrated": false, "stable": true, "predictive": false}, "64": {"concentrated": false, "stable": false, "predictive": false}, "128": {"concentrated": false, "stable": false, "predictive": false}}
+holds (>=3/4): {"concentrated": false, "stable": false, "predictive": false}
