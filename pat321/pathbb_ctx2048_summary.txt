@@ -1,0 +1,18 @@
+arm fc PaTH=data_ctx2048_path RoPE=data_ctx2048_rope  (sMAPE median over trajectories; delta = first - second, 95% paired bootstrap CI; frac = share of trajectories where first < second)
+L128: RoPE 81.47  RoPE+fc 31.68  PaTH 54.92  PaTH+fc 31.29  | r-only RoPE 31.19 PaTH 31.18
+   PaTH+fc - PaTH    -23.629 [-24.339, -22.961] frac 0.964
+   PaTH+fc - RoPE+fc -0.389 [-0.469, -0.212] frac 0.939
+   PaTH - RoPE       -26.550 [-26.933, -26.142] frac 0.988
+   RoPE+fc - RoPE    -49.790 [-50.776, -49.047] frac 1.000
+L256: RoPE 82.58  RoPE+fc 39.98  PaTH 63.76  PaTH+fc 39.57  | r-only RoPE 39.47 PaTH 39.45
+   PaTH+fc - PaTH    -24.193 [-24.896, -23.482] frac 0.973
+   PaTH+fc - RoPE+fc -0.409 [-0.557, -0.288] frac 0.956
+   PaTH - RoPE       -18.812 [-19.151, -18.539] frac 0.985
+   RoPE+fc - RoPE    -42.596 [-43.502, -41.718] frac 1.000
+L512: RoPE 83.56  RoPE+fc 48.27  PaTH 70.40  PaTH+fc 47.82  | r-only RoPE 47.72 PaTH 47.72
+   PaTH+fc - PaTH    -22.573 [-23.451, -21.864] frac 0.976
+   PaTH+fc - RoPE+fc -0.442 [-0.623, -0.371] frac 0.970
+   PaTH - RoPE       -13.166 [-13.367, -12.941] frac 0.971
+   RoPE+fc - RoPE    -35.296 [-36.046, -34.456] frac 0.999
+K1 (FreshCast helps PaTH at L256 & L512): True [True, True]
+K2 (PaTH+fc < RoPE+fc at >= 2/3 L): True [True, True, True]
