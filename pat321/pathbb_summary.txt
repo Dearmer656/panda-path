@@ -1,0 +1,20 @@
+srun: job 50411 queued and waiting for resources
+srun: job 50411 has been allocated resources
+arm fc   (sMAPE median over trajectories; delta = first - second, 95% paired bootstrap CI; frac = share of trajectories where first < second)
+L128: RoPE 34.97  RoPE+fc 34.65  PaTH 34.41  PaTH+fc 34.65  | r-only RoPE 34.65 PaTH 34.65
+   PaTH+fc - PaTH    +0.248 [-0.370, +0.969] frac 0.604
+   PaTH+fc - RoPE+fc +0.002 [-0.000, +0.059] frac 0.495
+   PaTH - RoPE       -0.562 [-0.919, -0.241] frac 0.542
+   RoPE+fc - RoPE    -0.317 [-0.936, +0.378] frac 0.616
+L256: RoPE 46.87  RoPE+fc 42.92  PaTH 46.38  PaTH+fc 43.00  | r-only RoPE 42.96 PaTH 42.96
+   PaTH+fc - PaTH    -3.382 [-4.013, -2.789] frac 0.712
+   PaTH+fc - RoPE+fc +0.078 [-0.069, +0.192] frac 0.593
+   PaTH - RoPE       -0.487 [-0.774, -0.128] frac 0.537
+   RoPE+fc - RoPE    -3.947 [-4.532, -3.305] frac 0.719
+L512: RoPE 57.37  RoPE+fc 50.93  PaTH 57.01  PaTH+fc 50.70  | r-only RoPE 50.69 PaTH 50.69
+   PaTH+fc - PaTH    -6.312 [-6.793, -5.799] frac 0.789
+   PaTH+fc - RoPE+fc -0.235 [-0.382, -0.073] frac 0.719
+   PaTH - RoPE       -0.362 [-0.603, -0.148] frac 0.551
+   RoPE+fc - RoPE    -6.439 [-6.881, -6.017] frac 0.799
+K1 (FreshCast helps PaTH at L256 & L512): True [True, True]
+K2 (PaTH+fc < RoPE+fc at >= 2/3 L): False [False, False, True]
