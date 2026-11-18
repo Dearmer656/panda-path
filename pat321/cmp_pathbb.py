@@ -3,12 +3,14 @@ PAT-321 job 37197). Per-trajectory sMAPE vectors (official aggregation, same 934
 paired bootstrap (2000 resamples of trajectories, seed 0) of the median difference.
   K1  PaTH+fc < PaTH        at L256 and L512, CI < 0
   K2  PaTH+fc < RoPE+fc     CI < 0 at >= 2 of L128/256/512
-usage: python pat321/cmp_pathbb.py [arm=fc]"""
+usage: python pat321/cmp_pathbb.py [arm=fc] [path_dir=data_pathbb] [rope_dir=data]   (ctx scan: fc data_ctx1024_path data_ctx1024_rope)"""
 import sys
 import numpy as np
 import torch
 
 ARM = sys.argv[1] if len(sys.argv) > 1 else 'fc'
+PD = sys.argv[2] if len(sys.argv) > 2 else 'data_pathbb'
+RD = sys.argv[3] if len(sys.argv) > 3 else 'data'
 rng = np.random.default_rng(0)
 
 
@@ -25,9 +27,9 @@ def boot(a, b, B=2000):
 
 
 k1, k2 = [], []
-print(f'arm {ARM}   (sMAPE median over trajectories; delta = first - second, 95% paired bootstrap CI; frac = share of trajectories where first < second)')
+print(f'arm {ARM} PaTH={PD} RoPE={RD}  (sMAPE median over trajectories; delta = first - second, 95% paired bootstrap CI; frac = share of trajectories where first < second)')
 for H in (128, 256, 512):
-    P, R = load('data_pathbb', H), load('data', H)
+    P, R = load(PD, H), load(RD, H)
     assert len(P['base']) == len(R['base'])
     print(f'L{H}: RoPE {np.median(R["base"]):.2f}  RoPE+fc {np.median(R["comb"]):.2f}  PaTH {np.median(P["base"]):.2f}  PaTH+fc {np.median(P["comb"]):.2f}  '
           f'| r-only RoPE {np.median(R["r"]):.2f} PaTH {np.median(P["r"]):.2f}')

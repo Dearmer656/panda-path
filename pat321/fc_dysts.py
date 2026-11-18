@@ -33,7 +33,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 ROOT = Path(__file__).resolve().parents[1]; sys.path.insert(0, str(ROOT))
-LQ, NSH, PATCH, CTX, T_LEN = 96, 200, 16, 512, 4096
+LQ, NSH, PATCH, T_LEN = 96, 200, 16, 4096
+CTX = int(os.environ.get('P321_CTX', 512))   # PAT-325: backbone context (512 = PAT-321; longer = length extrapolation)
+NPW = CTX // PATCH                             # patches per backbone window
 HS = (128, 256, 512)
 KMAX = (T_LEN - LQ) // PATCH + 1
 MAX_TEST = int(os.environ.get('P321_MAX_TEST', 0))
@@ -83,7 +85,7 @@ def sample_instances(files, n_traj, per_traj, seed):
             if ts.shape[-1] != T_LEN or not np.isfinite(ts).all():
                 continue
             trajs.append(ts)
-            for t in rng.integers(CTX, T_LEN - CTX + 1, size=per_traj):
+            for t in rng.integers(CTX, T_LEN - max(HS) + 1, size=per_traj):   # origin needs CTX before and a 512-step horizon after
                 inst.append((len(trajs) - 1, int(t)))
             break
     return trajs, inst
@@ -97,6 +99,7 @@ def load_backbone(ckpt, dev):
     transformers.set_seed(99)
     p = PatchTSTPipeline.from_pretrained(mode='predict', pretrain_path=ckpt, device_map=str(dev), torch_dtype=torch.float32)
     exact_load(p.model, ckpt)
+    p.model.config.context_length = CTX   # as pat318/evaluate_wrap.py P318_CTX
     p.model.eval()
     return p
 
@@ -111,11 +114,11 @@ def states_window(p, X, t, dev):
             break
         bi = ok.nonzero()[:, 0]
         win = torch.stack([X[b, :, end[b] - CTX:end[b]] for b in bi.tolist()]).transpose(1, 2)
-        hid = p.model.model(past_values=win).last_hidden_state                              # [b', C, 32, d]
-        for kk in range(32):
-            k = m * 32 + kk
+        hid = p.model.model(past_values=win).last_hidden_state                              # [b', C, NPW, d]
+        for kk in range(NPW):
+            k = m * NPW + kk
             if k < KMAX:
-                Hs[bi, :, k] = hid[:, :, 31 - kk].half()
+                Hs[bi, :, k] = hid[:, :, NPW - 1 - kk].half()
     return Hs
 
 

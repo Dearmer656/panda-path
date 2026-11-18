@@ -83,13 +83,14 @@ class PatchTSTRopeAttention(nn.Module):
         super().__init__()
         # PAT-318: pos in rope | nope | path | rope_path (None -> follow use_rope, the official behaviour)
         pos = pos or ("rope" if use_rope else "nope")
-        assert pos in ("rope", "nope", "path", "rope_path", "fox", "mamba3"), pos
+        assert pos in ("rope", "nope", "path", "rope_path", "fox", "path_fox", "mamba3"), pos
         self.pos = pos
         use_rope = "rope" in pos
         if "path" in pos:  # PaTH: w_t, beta_t from the attention layer input (bidirectional, see path_pos.py)
             self.w_proj = nn.Linear(embed_dim, embed_dim, bias=bias)
             self.beta_proj = nn.Linear(embed_dim, num_heads, bias=bias)
-        if pos == "fox":  # PAT-318 control: Forgetting Transformer (Lin et al., ICLR 2025) scalar forget gate per head, no RoPE
+        if "fox" in pos:  # PAT-318 control: Forgetting Transformer (Lin et al., ICLR 2025) scalar forget gate per head, no RoPE
+            # (path_fox = PaTH-FoX of Yang et al. 2505.16381: Householder path scores + the same forget-gate bias)
             self.fgate_proj = nn.Linear(embed_dim, num_heads, bias=True)
         self.embed_dim = embed_dim
         self.num_heads = num_heads
@@ -213,7 +214,7 @@ class PatchTSTRopeAttention(nn.Module):
             attn_weights = bidir_path_scores(query_states, key_states, w.to(query_states.dtype), beta.to(query_states.dtype))
         else:
             attn_weights = torch.bmm(query_states, key_states.transpose(1, 2))
-        if self.pos == "fox":  # bias[i, j] = sum of log f_s over the steps between j and i (bidirectional walk, as in path)
+        if "fox" in self.pos:  # bias[i, j] = sum of log f_s over the steps between j and i (bidirectional walk, as in path)
             c = torch.cumsum(nn.functional.logsigmoid(self.fgate_proj(hidden_states).float()).transpose(1, 2).reshape(bsz * self.num_heads, -1), -1)
             attn_weights = attn_weights + (-(c[:, :, None] - c[:, None, :]).abs()).to(attn_weights.dtype)
 
