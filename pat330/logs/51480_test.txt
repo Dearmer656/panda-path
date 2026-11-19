@@ -1,0 +1,5 @@
+H128 block descriptor max rel err 2.44e-06 over 25600 entries
+H128 base descriptors unchanged
+H512 block descriptor max rel err 2.41e-06 over 24044 entries
+H512 base descriptors unchanged
+ok

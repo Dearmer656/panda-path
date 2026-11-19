@@ -41,7 +41,8 @@ KMAX = (T_LEN - LQ) // PATCH + 1
 MAX_TEST = int(os.environ.get('P321_MAX_TEST', 0))
 SD_FLOOR, CLIP, C_MAX = 1e-2, 1000.0, 20.0
 EPOCHS, BATCH, LR, WD, EMA = int(os.environ.get('P321_EPOCHS', 30)), 256, 2e-3, 1e-2, 0.995
-NZ, NU, DK, DH = 8, 6, 32, 64
+BLOCKS = int(os.environ.get('P330_BLOCKS', 0))   # PAT-330: number of equal segments of the LQ window used as extra descriptors (0 = off)
+NZ, NU, DK, DH = 8 + BLOCKS, 6, 32, 64
 OUT = Path(os.environ.get('P321_OUT', ROOT / 'pat321' / 'data'))
 
 
@@ -233,6 +234,11 @@ def build(se, rows, t, H):
     hd = hist_desc(X, t)
     z = torch.stack([val.float(), cs, torch.log1p((t[:, None] - s2).float() / LQ), gap, ratio], -1)
     z = torch.cat([z, hd[:, None].expand(-1, s2.shape[1], -1)], -1)
+    if BLOCKS:   # PAT-330: per-segment mean squared error of the candidate window (in its readout's units) vs the query window
+        W = X.gather(1, (s2[..., None] + kq).reshape(B, -1)).reshape(B, s2.shape[1], LQ)
+        W = torch.where(val[..., None], W, mq[:, None, None] + sq[:, None, None] / scc.clamp_min(1e-10)[..., None] * (W - mc[..., None]))
+        e = ((W - (qc + mq[:, None])[:, None]) / ctx_s[:, None, None]).square().reshape(B, s2.shape[1], BLOCKS, LQ // BLOCKS).mean(-1)
+        z = torch.cat([z, torch.log(e + 1e-4).clamp(-10, 10)], -1)
     n = vs.float().sum(1).clamp_min(1)
     m1 = (top * vs).sum(1) / n
     sdv = (((top - m1[:, None]) * vs).square().sum(1) / n).sqrt()
