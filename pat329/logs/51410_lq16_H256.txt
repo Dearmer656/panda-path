@@ -1,0 +1,6 @@
+[test] LQ 16 H256 (lambda 0.01, smap_8.0_0.01, 16 coords) r_only 43.539 smap_fc 41.055 smap_classic 46.327 smap_fc_96 41.343 r_only_96 42.956 parrot_full 41.341
+   smap_fc-smap_fc_96         -0.288 [-0.645, +0.253] frac 0.462
+   r_only-r_only_96           +0.583 [+0.067, +1.001] frac 0.475
+   smap_fc-parrot_full        -0.286 [-0.705, +0.107] frac 0.505
+   smap_classic-parrot_full   +4.987 [+4.603, +5.455] frac 0.218
+   r_only-parrot_full         +2.198 [+1.779, +2.568] frac 0.275

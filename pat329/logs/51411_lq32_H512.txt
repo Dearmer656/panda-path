@@ -1,0 +1,6 @@
+[test] LQ 32 H512 (lambda 0.1, smap_8.0_0.01, 16 coords) r_only 50.752 smap_fc 48.703 smap_classic 50.416 smap_fc_96 48.405 r_only_96 50.690 parrot_full 47.649
+   smap_fc-smap_fc_96         +0.298 [-0.053, +0.575] frac 0.492
+   r_only-r_only_96           +0.062 [-0.326, +0.341] frac 0.515
+   smap_fc-parrot_full        +1.054 [+0.685, +1.377] frac 0.443
+   smap_classic-parrot_full   +2.767 [+2.378, +3.126] frac 0.304
+   r_only-parrot_full         +3.103 [+2.697, +3.484] frac 0.264
