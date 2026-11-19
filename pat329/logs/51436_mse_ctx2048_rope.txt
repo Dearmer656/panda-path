@@ -1,0 +1,3 @@
+[mse] H128 panda@LQ96: MSE 1.0033 amp 0.172 sMAPE 81.470
+[mse] H256 panda@LQ96: MSE 1.0249 amp 0.154 sMAPE 82.575
+[mse] H512 panda@LQ96: MSE 1.0318 amp 0.138 sMAPE 83.562

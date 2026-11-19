@@ -1,0 +1,12 @@
+[stride] LQ 96 H128 stride 1 (96 coords) lambda 0.1: test sMAPE 32.030 MSE 0.8110
+[stride] LQ 96 H128 stride 2 (48 coords) lambda 0.1: test sMAPE 31.876 MSE 0.7566
+[stride] LQ 96 H128 stride 4 (24 coords) lambda 0.1: test sMAPE 31.700 MSE 0.7020
+[stride] LQ 96 H128 stride 8 (12 coords) lambda 0.01: test sMAPE 31.599 MSE 0.7451
+[stride] LQ 96 H256 stride 1 (96 coords) lambda 0.1: test sMAPE 41.452 MSE 1.1664
+[stride] LQ 96 H256 stride 2 (48 coords) lambda 0.1: test sMAPE 41.250 MSE 1.0904
+[stride] LQ 96 H256 stride 4 (24 coords) lambda 1.0: test sMAPE 41.206 MSE 0.8571
+[stride] LQ 96 H256 stride 8 (12 coords) lambda 0.01: test sMAPE 41.343 MSE 1.0572
+[stride] LQ 96 H512 stride 1 (96 coords) lambda 0.01: test sMAPE 48.547 MSE 1.6634
+[stride] LQ 96 H512 stride 2 (48 coords) lambda 0.01: test sMAPE 48.383 MSE 1.5441
+[stride] LQ 96 H512 stride 4 (24 coords) lambda 0.1: test sMAPE 48.068 MSE 1.2345
+[stride] LQ 96 H512 stride 8 (12 coords) lambda 0.1: test sMAPE 48.405 MSE 1.1520
