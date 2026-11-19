@@ -84,5 +84,6 @@ def run(H, methods):
     torch.save(out, ROOT / 'pat329' / 'out' / f'mse{TAG}_lq{LQ}_H{H}.pt')
 
 
-for H, methods in PLAN.items():
-    if methods: run(H, methods)
+if __name__ == '__main__':   # stride.py imports per_traj only
+    for H, methods in PLAN.items():
+        if methods: run(H, methods)
