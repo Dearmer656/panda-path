@@ -1,0 +1,1 @@
+[test] ctx 2048 H512 (ctx_16, full_64) parrot_ctx 49.883 parrot_full 44.335

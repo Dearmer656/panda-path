@@ -1,0 +1,8 @@
+[test] ctx 512 H512 (ctx_8, full_64) parrot_ctx 57.611 parrot_full 47.649 smap_fc 48.405 smap_classic 48.801 r_only 50.690 panda 57.373
+   smap_fc-parrot_ctx         -9.206 [-9.714, -8.640] frac 0.630
+   smap_fc-parrot_full        +0.756 [+0.409, +1.139] frac 0.451
+   smap_classic-parrot_ctx    -8.810 [-9.329, -8.183] frac 0.596
+   smap_classic-parrot_full   +1.152 [+0.819, +1.556] frac 0.389
+   r_only-parrot_ctx          -6.921 [-7.389, -6.364] frac 0.549
+   r_only-parrot_full         +3.042 [+2.689, +3.416] frac 0.287
+   parrot_ctx-panda           +0.238 [-0.234, +0.693] frac 0.682
