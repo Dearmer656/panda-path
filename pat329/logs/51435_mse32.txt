@@ -1,0 +1,2 @@
+[mse] H128 smap_0.01@LQ32: MSE 0.5801 amp 0.979 sMAPE 29.281
+[mse] H512 r_top1@LQ32: MSE 1.3693 amp 1.000 sMAPE 47.685

@@ -1,0 +1,2 @@
+[mse] H256 smap_0.01@LQ64: MSE 1.0048 amp 0.984 sMAPE 40.265
+[mse] H512 smap_0.1@LQ64: MSE 1.1942 amp 0.925 sMAPE 48.332
