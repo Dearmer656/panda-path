@@ -10,9 +10,14 @@ import torch
 import fc_corr as C  # noqa: E402
 FC = C.FC
 LQ = FC.LQ; dev = torch.device('cuda')
-LAM96 = {128: 0.01, 256: 0.01, 512: 0.1}                   # smap-fc lambda chosen on val in PAT-327
-D_FULL, D_CTX = {128: 32, 256: 64, 512: 64}, 8            # parroting match lengths chosen on val
-PLAN = {96: {H: ['r_all', 'r_top1', f'smap_{LAM96[H]}', 'panda', 'parrot_full', 'parrot_ctx'] for H in (128, 256, 512)},
+CTX = FC.CTX
+# hyperparameters chosen on val earlier (PAT-327 / ctx_scan / parrot.py), per backbone context
+LAM96 = {512: {128: 0.01, 256: 0.01, 512: 0.1}, 1024: {128: 0.01, 256: 0.1, 512: 0.1}, 2048: {128: 0.01, 256: 0.1, 512: 0.1}}[CTX]
+D_FULL = {512: {128: 32, 256: 64, 512: 64}, 1024: {128: 64, 256: 64, 512: 64}, 2048: {128: 32, 256: 64, 512: 64}}[CTX]
+D_CTX = {512: 8, 1024: 8, 2048: 16}[CTX]
+ONLY = os.environ.get('P329_ONLY')                          # 'panda': backbone only (e.g. the RoPE data dir)
+TAG = '' if CTX == 512 else f'_ctx{CTX}' + (f'_{ONLY}' if ONLY else '')
+PLAN = {96: {H: (['panda'] if ONLY else ['r_all', 'r_top1', f'smap_{LAM96[H]}', 'panda', 'parrot_full', 'parrot_ctx']) for H in (128, 256, 512)},
         32: {128: ['smap_0.01'], 256: [], 512: ['r_top1']},
         64: {128: [], 256: ['smap_0.01'], 512: ['smap_0.1']}}[LQ]
 
@@ -76,7 +81,7 @@ def run(H, methods):
         out[f'{m}@LQ{LQ}'] = {k: per_traj(torch.cat(x), d['ids'], d['inst']) for k, x in v.items()}
         print(f'[mse] H{H} {m}@LQ{LQ}: MSE {float(out[f"{m}@LQ{LQ}"]["mse"].median()):.4f} amp {float(torch.cat(v["amp"]).median()):.3f} '
               f'sMAPE {100 * float(out[f"{m}@LQ{LQ}"]["smape"].median()):.3f}', flush=True)
-    torch.save(out, ROOT / 'pat329' / 'out' / f'mse_lq{LQ}_H{H}.pt')
+    torch.save(out, ROOT / 'pat329' / 'out' / f'mse{TAG}_lq{LQ}_H{H}.pt')
 
 
 for H, methods in PLAN.items():
