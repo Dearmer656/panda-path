@@ -1,0 +1,13 @@
+Traceback (most recent call last):
+  File "/project/nlp-work5/hongyu-s/state_path_attn/panda/pat321/fc_dysts.py", line 549, in <module>
+    {'prep': run_prep, 'check': run_check, 'train': run_train, 'test': run_test}[a.stage](a, dev)
+  File "/project/nlp-work5/hongyu-s/state_path_attn/panda/pat321/fc_dysts.py", line 416, in run_train
+    d, se = load_set('train', dev)
+            ^^^^^^^^^^^^^^^^^^^^^^
+  File "/project/nlp-work5/hongyu-s/state_path_attn/panda/pat321/fc_dysts.py", line 363, in load_set
+    se = Series(d['S'].to(dev))
+         ^^^^^^^^^^^^^^^^^^^^^^
+  File "/project/nlp-work5/hongyu-s/state_path_attn/panda/pat321/fc_dysts.py", line 186, in __init__
+    mu[:, LQ:] = m; sd[:, LQ:] = ((c2[:, LQ:] - c2[:, :-LQ]) / LQ - m.square()).clamp_min(0).sqrt()
+                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 588.00 MiB. GPU 0 has a total capacity of 47.45 GiB of which 350.56 MiB is free. Process 1516095 has 6.03 GiB memory in use. Process 1516094 has 6.03 GiB memory in use. Process 1516109 has 6.03 GiB memory in use. Process 1516110 has 6.03 GiB memory in use. Process 1516111 has 6.03 GiB memory in use. Process 1516103 has 6.02 GiB memory in use. Process 1516101 has 6.02 GiB memory in use. Including non-PyTorch memory, this process has 4.87 GiB memory in use. Of the allocated memory 4.37 GiB is allocated by PyTorch, and 10.81 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)

@@ -1,0 +1,29 @@
+Traceback (most recent call last):
+  File "/project/nlp-work5/hongyu-s/state_path_attn/panda/pat330/valsel_pred.py", line 35, in <module>
+    out = {H: {s: run(s, H) for s in ('val', 'test')} for H in HS}
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/project/nlp-work5/hongyu-s/state_path_attn/panda/pat330/valsel_pred.py", line 35, in <dictcomp>
+    out = {H: {s: run(s, H) for s in ('val', 'test')} for H in HS}
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/project/nlp-work5/hongyu-s/state_path_attn/panda/pat330/valsel_pred.py", line 35, in <dictcomp>
+    out = {H: {s: run(s, H) for s in ('val', 'test')} for H in HS}
+                  ^^^^^^^^^
+  File "/project/nlp-work5/hongyu-s/state_path_attn/panda/.venv/lib/python3.11/site-packages/torch/utils/_contextlib.py", line 120, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/project/nlp-work5/hongyu-s/state_path_attn/panda/pat330/valsel_pred.py", line 17, in run
+    fcm = C.load_fc(H, dev); d, se = FC.load_set(name, dev)
+          ^^^^^^^^^^^^^^^^^
+  File "/project/nlp-work5/hongyu-s/state_path_attn/panda/pat327/fc_corr.py", line 40, in load_fc
+    m.load_state_dict(torch.load(Path(os.environ['P321_OUT']) / f'scorer_fc_H{H}_s99.pt')['state']); m.eval()
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/project/nlp-work5/hongyu-s/state_path_attn/panda/.venv/lib/python3.11/site-packages/torch/serialization.py", line 1484, in load
+    with _open_file_like(f, "rb") as opened_file:
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/project/nlp-work5/hongyu-s/state_path_attn/panda/.venv/lib/python3.11/site-packages/torch/serialization.py", line 759, in _open_file_like
+    return _open_file(name_or_buffer, mode)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/project/nlp-work5/hongyu-s/state_path_attn/panda/.venv/lib/python3.11/site-packages/torch/serialization.py", line 740, in __init__
+    super().__init__(open(name, mode))
+                     ^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'pat330/fair1024/scorer_fc_H256_s99.pt'

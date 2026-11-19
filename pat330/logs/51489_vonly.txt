@@ -1,0 +1,3 @@
+[vonly] H128 val r_all 34.00 r_top1 32.85 smap_0.01 29.40 smap_0.1 30.00 smap_1.0 30.58
+[vonly] H256 val r_all 42.79 r_top1 40.78 smap_0.01 39.06 smap_0.1 38.91 smap_1.0 39.63
+[vonly] H512 val r_all 53.28 r_top1 50.26 smap_0.01 51.69 smap_0.1 51.15 smap_1.0 51.34

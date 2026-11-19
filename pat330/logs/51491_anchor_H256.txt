@@ -1,0 +1,9 @@
+/project/nlp-work5/hongyu-s/state_path_attn/panda/pat330/anchor.py:109: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:836.)
+  l = loss_of(model, bt); opt.zero_grad(); l.backward(); opt.step(); tot += float(l); n += 1
+[anchor] H256 ep 0 train 1.0313 val 1.0504 b [1.44, 1.08, 0.68, -0.48, -0.91, -0.81] tau 0.0158 4s
+[anchor] H256 ep 1 train 0.9607 val 1.0290 b [1.92, 1.03, 0.47, -0.68, -1.06, -0.84] tau 0.0101 3s
+[anchor] H256 ep 2 train 0.9580 val 1.0281 b [2.09, 0.92, 0.38, -0.74, -1.09, -0.83] tau 0.0095 2s
+[anchor] H256 ep 3 train 0.9578 val 1.0298 b [2.24, 1.0, 0.11, -0.82, -1.07, -0.81] tau 0.0094 2s
+[anchor] H256 val anc_mean 43.47/0.778 anc_top1 39.48/1.086 anc_smap_0.01 38.73/1.265 anc_smap_0.1 39.95/1.117 anc_smap_1.0 40.58/0.953
+[anchor] H256 test anc_mean 43.45/0.830 anc_top1 41.67/1.103 anc_smap_0.01 41.79/1.279 anc_smap_0.1 41.60/1.041 anc_smap_1.0 41.72/0.901

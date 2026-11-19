@@ -190,7 +190,9 @@ class Series:
 def hist_desc(S, t):
     """acf lag 16, acf lag 96, log mean squared diff on [0, t) per query; S rows already gathered [B, T]."""
     B = len(S); ar = torch.arange(T_LEN, device=S.device)[None]
-    m = (ar < t[:, None]).float()
+    m = (ar < t[:, None])
+    if os.environ.get('P330_HIST') == 'ctx': m = m & (ar >= (t - CTX)[:, None])   # PAT-330: statistics from the context only
+    m = m.float()
     n = m.sum(1)
     mean = (S * m).sum(1) / n
     xc = (S - mean[:, None]) * m
@@ -217,6 +219,8 @@ def build(se, rows, t, H):
     sc = se.sd[rows][:, LQ:]
     cos = dot / (LQ * sc * sq[:, None]).clamp_min(1e-12)
     ok = (s_all[None] + H <= t[:, None]) & (sc > 1e-6) & (sq[:, None] > 1e-6)
+    if os.environ.get('P330_HIST') == 'ctx':   # PAT-330 fair comparison: candidate window and its future inside [t - CTX, t)
+        ok &= s_all[None] - LQ >= (t - CTX)[:, None]
     cos = cos.masked_fill(~ok, -math.inf)
     k = min(NSH, cos.shape[1])
     top, ti = cos.topk(k, 1)

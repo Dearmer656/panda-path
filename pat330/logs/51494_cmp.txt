@@ -1,0 +1,22 @@
+== ctx 512 H128: val-selected smap_0.01 (val 46.32); test sMAPE 45.27 MSE 1.252
+   vs RoPE        smape 34.969 d +10.302 [+9.637, +10.992] | mse 0.500 d +0.751 [+0.730, +0.777]
+   vs parrot_ctx  smape 43.285 d +1.987 [+1.566, +2.451] | mse 1.138 d +0.113 [+0.090, +0.139]
+   vs parrot_full smape 33.638 d +11.633 [+11.069, +12.185] | mse 0.746 d +0.505 [+0.478, +0.532]
+== ctx 512 H256: val-selected r_top1 (val 56.22); test sMAPE 54.52 MSE 1.555
+   vs RoPE        smape 46.866 d +7.649 [+6.993, +8.371] | mse 0.771 d +0.784 [+0.760, +0.807]
+   vs parrot_ctx  smape 51.168 d +3.347 [+2.838, +3.849] | mse 1.482 d +0.073 [+0.049, +0.093]
+   vs parrot_full smape 41.341 d +13.175 [+12.558, +13.828] | mse 1.078 d +0.477 [+0.449, +0.502]
+Traceback (most recent call last):
+  File "/project/nlp-work5/hongyu-s/state_path_attn/panda/pat330/fair_cmp.py", line 15, in <module>
+    R = torch.load(O / f'valsel_fair{C}.pt')
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/project/nlp-work5/hongyu-s/state_path_attn/panda/.venv/lib/python3.11/site-packages/torch/serialization.py", line 1484, in load
+    with _open_file_like(f, "rb") as opened_file:
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/project/nlp-work5/hongyu-s/state_path_attn/panda/.venv/lib/python3.11/site-packages/torch/serialization.py", line 759, in _open_file_like
+    return _open_file(name_or_buffer, mode)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/project/nlp-work5/hongyu-s/state_path_attn/panda/.venv/lib/python3.11/site-packages/torch/serialization.py", line 740, in __init__
+    super().__init__(open(name, mode))
+                     ^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/project/nlp-work5/hongyu-s/state_path_attn/panda/pat330/out/valsel_fair1024.pt'

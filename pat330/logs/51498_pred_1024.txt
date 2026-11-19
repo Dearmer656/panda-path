@@ -1,0 +1,3 @@
+[fair1024] H128 val r_all 37.50 r_top1 35.52 smap_0.01 35.57 smap_0.1 34.75 smap_1.0 36.17
+[fair1024] H256 val r_all 47.82 r_top1 45.77 smap_0.01 46.24 smap_0.1 46.10 smap_1.0 47.04
+[fair1024] H512 val r_all 59.58 r_top1 57.35 smap_0.01 57.85 smap_0.1 57.46 smap_1.0 58.44

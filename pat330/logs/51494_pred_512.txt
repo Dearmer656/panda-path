@@ -1,0 +1,2 @@
+[fair512] H128 val r_all 48.58 r_top1 46.66 smap_0.01 46.32 smap_0.1 46.96 smap_1.0 47.66
+[fair512] H256 val r_all 59.59 r_top1 56.22 smap_0.01 57.35 smap_0.1 56.79 smap_1.0 57.42
