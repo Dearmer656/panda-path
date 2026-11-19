@@ -1,0 +1,9 @@
+[topk] LQ 96 H256 val best smap_k5_l0.1 38.185
+   smap_k5_l0.1     val 38.185 test 41.421
+   smap_k20_l0.1    val 38.224 test 41.227
+   smap_k5_l0.01    val 38.416 test 41.629
+   r_k1             val 38.465 test 41.348
+   smap_k20_l1.0    val 38.531 test 41.084
+   smap_k5_l1.0     val 38.755 test 41.282
+   r_k5             val 39.239 test 41.603
+   smap_k50_l0.1    val 39.264 test 40.907

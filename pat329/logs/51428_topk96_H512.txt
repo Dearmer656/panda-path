@@ -1,0 +1,9 @@
+[topk] LQ 96 H512 val best smap_k5_l0.1 49.674
+   smap_k5_l0.1     val 49.674 test 48.007
+   smap_k5_l0.01    val 50.084 test 48.195
+   smap_k400_l0.1   val 50.239 test 48.405
+   r_k5             val 50.293 test 48.182
+   smap_k5_l1.0     val 50.372 test 47.716
+   r_k1             val 50.675 test 47.933
+   smap_k50_l0.1    val 50.965 test 48.155
+   smap_k20_l0.1    val 51.009 test 47.980

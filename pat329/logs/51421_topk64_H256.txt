@@ -1,0 +1,9 @@
+[topk] LQ 64 H256 val best smap_k400_l0.01 37.135
+   smap_k400_l0.01  val 37.135 test 40.265
+   smap_k5_l1.0     val 37.178 test 40.457
+   smap_k50_l0.01   val 37.391 test 40.475
+   smap_k20_l0.01   val 37.518 test 40.786
+   smap_k5_l0.1     val 37.741 test 40.681
+   smap_k400_l0.1   val 37.919 test 40.235
+   smap_k5_l0.01    val 38.026 test 41.029
+   smap_k50_l0.1    val 38.107 test 40.337

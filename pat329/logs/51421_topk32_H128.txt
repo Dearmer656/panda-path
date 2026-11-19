@@ -1,0 +1,9 @@
+[topk] LQ 32 H128 val best smap_k400_l0.01 26.256
+   smap_k400_l0.01  val 26.256 test 29.281
+   smap_k20_l0.01   val 26.269 test 29.745
+   smap_k50_l0.01   val 26.467 test 29.349
+   smap_k5_l0.1     val 27.104 test 30.945
+   smap_k20_l0.1    val 27.109 test 29.757
+   smap_k5_l1.0     val 27.330 test 30.804
+   smap_k50_l0.1    val 27.462 test 29.716
+   smap_k5_l0.01    val 27.463 test 31.174

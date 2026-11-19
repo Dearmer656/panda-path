@@ -1,0 +1,17 @@
+Traceback (most recent call last):
+  File "/project/nlp-work5/hongyu-s/state_path_attn/panda/pat329/topk.py", line 44, in <module>
+    dt, pt, yt = predict('test')
+                 ^^^^^^^^^^^^^^^
+  File "/project/nlp-work5/hongyu-s/state_path_attn/panda/.venv/lib/python3.11/site-packages/torch/utils/_contextlib.py", line 120, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/project/nlp-work5/hongyu-s/state_path_attn/panda/pat329/topk.py", line 21, in predict
+    d, se = FC.load_set(name, dev)
+            ^^^^^^^^^^^^^^^^^^^^^^
+  File "/project/nlp-work5/hongyu-s/state_path_attn/panda/pat321/fc_dysts.py", line 353, in load_set
+    se = Series(d['S'].to(dev))
+         ^^^^^^^^^^^^^^^^^^^^^^
+  File "/project/nlp-work5/hongyu-s/state_path_attn/panda/pat321/fc_dysts.py", line 185, in __init__
+    mu[:, LQ:] = m; sd[:, LQ:] = ((c2[:, LQ:] - c2[:, :-LQ]) / LQ - m.square()).clamp_min(0).sqrt()
+                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 916.00 MiB. GPU 0 has a total capacity of 47.45 GiB of which 131.19 MiB is free. Process 3244007 has 9.54 GiB memory in use. Process 3244006 has 9.44 GiB memory in use. Process 3244009 has 9.42 GiB memory in use. Process 3244003 has 9.48 GiB memory in use. Process 3244008 has 1.14 GiB memory in use. Including non-PyTorch memory, this process has 8.25 GiB memory in use. Of the allocated memory 7.72 GiB is allocated by PyTorch, and 36.72 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
