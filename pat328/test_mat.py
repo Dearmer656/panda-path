@@ -33,7 +33,10 @@ for H in (128, 512):
     torch.nn.init.normal_(m.dec.weight, std=0.1)
     U, V = m.uv(qp[:, None].expand_as(xs), xs, ys)
     I = torch.eye(M.D, device=dev)
-    A = torch.where(ok[..., None, None], I + U @ V.transpose(-1, -2), I)
+    A = I + U @ V.transpose(-1, -2)
+    A = A * ((1 + M.EPS) / (1 + U.flatten(-2).norm(dim=-1) * V.flatten(-2).norm(dim=-1))).clamp(max=1.0)[..., None, None]
+    A = torch.where(ok[..., None, None], A, I)
+    assert float(torch.linalg.matrix_norm(A, ord=2).max()) <= 1 + M.EPS + 1e-4, 'step norm bound'
     e = m.E(R)
     full = m(w, R, qp, cp, steps=(xs, ys, ok), n=n)
     v_naive = torch.zeros_like(e)

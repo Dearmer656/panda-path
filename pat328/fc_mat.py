@@ -8,7 +8,8 @@
 
   yhat_j = [I + Dec (M_j - I) E] y+_j        E: H -> D linear (no bias), Dec: D -> H linear, zero-initialised
                                               (training starts exactly at r-only)
-  A = I + U V^T, U, V in R^{D x r} = 0.03 tanh(.)   (general low rank, not Householder)
+  A = I + U V^T, U, V in R^{D x r} = 0.5 tanh(.), D = 32, r = 4 (general low rank, not Householder); path-m rescales each
+  A_k so that ||A_k||_2 <= 1.02 (finite 250-step products). v1 (D 16, r 2, 0.03 bound) could not fit the training set.
   pair-m  M_j = A_j,  (U_j, V_j) = Net(x_t, x_j, y+_j)
   path-m  steps i_k = t - H - 16 k, k = 0 .. n_j - 1, n_j = floor((t - H - j) / 16) + 1 (walk from t - H back to j; no
           step after t - H, so y+_{i_k} = y(i_k + 1 : i_k + H) is fully observed: no leakage)
@@ -30,7 +31,7 @@ FC = C.FC
 
 OUT = ROOT / 'pat328' / 'out'
 LQ, STEP = FC.LQ, 16
-D, RK, HID, SC = 16, 2, 128, 0.03
+D, RK, HID, SC, EPS = 32, 4, 128, 0.5, 0.02   # v2: v1 (16, 2, 0.03) could not fit even the training set
 LAMS = C.LAMS
 
 
@@ -60,6 +61,9 @@ class Mat(nn.Module):
             U, V = self.uv(qp[:, None].expand_as(xs), xs, ys)                             # [B, K, D, RK]
             I = torch.eye(D, device=R.device)
             A = I + U @ V.transpose(-1, -2)
+            # keep the 250-step product finite: ||A_k||_2 <= 1 + ||U||_F ||V||_F, rescale so that ||A_k||_2 <= 1 + EPS
+            bound = 1 + U.flatten(-2).norm(dim=-1) * V.flatten(-2).norm(dim=-1)
+            A = A * ((1 + EPS) / bound).clamp(max=1.0)[..., None, None]
             A = torch.where(ok[..., None, None], A, I)
             B, K = ok.shape
             Ms = [I.expand(B, D, D)]; M = Ms[0]
