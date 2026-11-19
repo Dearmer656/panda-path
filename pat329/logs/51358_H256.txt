@@ -1,0 +1,8 @@
+[val] H256 best smap_8.0_0.01 41.876 | simplex 40.872
+[check] r-only median pat327 42.9555 vs pat321 42.9555; n 9347 9347
+[test] H256 smap_classic 42.165 simplex 43.040 smap_fc 41.343 r_only 42.956 panda 46.866
+   smap_classic-smap_fc   +0.821 [+0.449, +1.342] frac 0.281
+   smap_classic-r_only    -0.791 [-1.216, -0.390] frac 0.618
+   smap_classic-panda     -4.701 [-5.238, -4.108] frac 0.779
+   simplex-r_only         +0.084 [-0.388, +0.444] frac 0.709
+   smap_fc-panda          -5.523 [-6.194, -4.969] frac 0.792

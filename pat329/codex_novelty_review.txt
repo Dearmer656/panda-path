@@ -1,0 +1,54 @@
+Reading additional input from stdin...
+OpenAI Codex v0.170.0
+--------
+workdir: /tmp
+model: gpt-6.1-sol
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1f43b-9ede-7da0-ae96-7ff8649c3636
+--------
+user
+Novelty check, brutally honest, <= 250 words. Setting: zero-shot chaotic forecasting (dysts, Panda test set). Finding: retrieving top-200 analog windows from the trajectory's OWN history (FreshCast-style learned weights) and applying a closed-form weighted local-linear (S-map / Farmer-Sidorowich) correction beats Panda, PaTH/FoX variants, and FreshCast by ~3 sMAPE points, while a classical S-map with exp-distance weights is not better than plain retrieval; learned per-candidate transforms of retrieved futures do not transfer to unseen systems. Proposed method: self-attention over (window, future) tokens + query token trained to do in-context regression (learned S-map). Known prior: von Oswald 2023, Akyurek 2023, Local Linear Attention 2510.01450, ICTSP 2405.14982, context parroting 2505.11349 (benchmarks simplex projection but NOT S-map; lists S-map as future work), ROAR 2605.24911, FreshCast 2610.07834. Q1: closest prior work and delta for the method. Q2: has anyone reported local-linear / S-map analog forecasting beating time-series foundation models on dysts zero-shot? Q3: score 1-10, PROCEED/CAUTION/ABANDON, and the single decisive experiment.
+warning: Codex could not find bubblewrap on PATH. Install bubblewrap with your OS package manager. See the sandbox prerequisites: https://developers.openai.com/codex/concepts/sandboxing#prerequisites. Codex will use the bundled bubblewrap in the meantime.
+2026-11-19T14:35:10.979369Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when AuthRequired(AuthRequiredError { www_authenticate_header: "Bearer resource_metadata=\"https://mcp.figma.com/.well-known/oauth-protected-resource\",scope=\"mcp:connect\",authorization_uri=\"https://api.figma.com/.well-known/oauth-authorization-server\"" })
+warning: `[features].multi_agent` is deprecated. It still controls the V1 fallback. `[agents].enabled = false` disables subagent tools even when the model selects a subagent version, unless `[features].multi_agent_v2` is enabled.
+warning: `[features].multi_agent` is deprecated. It still controls the V1 fallback. `[agents].enabled = false` disables subagent tools even when the model selects a subagent version, unless `[features].multi_agent_v2` is enabled.
+2026-11-19T14:35:14.029318Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when AuthRequired(AuthRequiredError { www_authenticate_header: "Bearer resource_metadata=\"https://mcp.figma.com/.well-known/oauth-protected-resource\",scope=\"mcp:connect\",authorization_uri=\"https://api.figma.com/.well-known/oauth-authorization-server\"" })
+codex
+I’ll use the novelty-check skill to verify the closest papers and benchmark claims, then give a blunt verdict within 250 words.
+web search: 
+web search: "dysts" "S-map" ...
+web search: 
+web search: "dysts" "S-map" forecasting foundation ...
+web search: 
+web search: 'Abstract'
+web search: 
+web search: "dysts" "local" "Chronos" regression ...
+codex
+ICTSP is very close: it already uses historical input–future pairs as tokens, a target token, and similarity retrieval. I also verified that context parroting distinguishes classical local-linear S-map from its kernel-average analogue; I haven’t found the exact S-map-versus-foundation-model result you describe.
+web search: 
+web search: "S-map" "foundation" forecasting -site:scribd.com -site:researchgate.net ...
+codex
+**Q1. Closest prior and delta.** Architecturally, [ICTSP](https://arxiv.org/html/2405.14982v2) is uncomfortably close: historical input–future pairs become tokens, interact with target tokens, and support similarity retrieval. “Self-attention learns regression from analogs” is therefore weak novelty. Mathematically, [Local Linear Attention](https://arxiv.org/html/2510.01450v1) is closer still: query-dependent weighted local-linear regression with a first-order correction already exists.
+
+Your defensible delta is **cross-system learned weighting combined with local affine adaptation, validated on unseen chaotic systems**. Relative to [FreshCast’s](https://arxiv.org/html/2610.07834v3) convex combination of candidate readouts, local-linear correction permits extrapolation. Replacing the solver with generic attention needs its own evidence; your current result establishes the hybrid’s value, not the proposed transformer’s.
+
+**Q2. Prior benchmark result?** I found **no verified report of classical local-linear/S-map analog forecasting beating TSFMs under your exact dysts/Panda zero-shot protocol**. This is a search finding, not proof of priority. [Context parroting](https://arxiv.org/html/2505.11349v3) explicitly leaves those comparisons open; its S-map discussion uses kernel averaging and acknowledges that classical S-map instead fits a local-linear model.
+
+**Q3. 5/10 — CAUTION.** Promising empirical finding; incremental method. Failed candidate transforms motivate investigating contextual adaptation but do not establish its mechanism.
+
+**Single decisive experiment:** freeze identical top-200 neighborhoods and run a system-held-out factorial comparison: distance versus learned weights × retrieval averaging versus tuned ridge local-linear regression versus your attention regressor, including ICTSP/LLA implementations. Match available history; require every candidate continuation to end before the forecast origin. Report system-level paired confidence intervals. If attention cannot beat your existing learned-weight closed-form solver, abandon the transformer novelty claim.
+tokens used
+51,879
+**Q1. Closest prior and delta.** Architecturally, [ICTSP](https://arxiv.org/html/2405.14982v2) is uncomfortably close: historical input–future pairs become tokens, interact with target tokens, and support similarity retrieval. “Self-attention learns regression from analogs” is therefore weak novelty. Mathematically, [Local Linear Attention](https://arxiv.org/html/2510.01450v1) is closer still: query-dependent weighted local-linear regression with a first-order correction already exists.
+
+Your defensible delta is **cross-system learned weighting combined with local affine adaptation, validated on unseen chaotic systems**. Relative to [FreshCast’s](https://arxiv.org/html/2610.07834v3) convex combination of candidate readouts, local-linear correction permits extrapolation. Replacing the solver with generic attention needs its own evidence; your current result establishes the hybrid’s value, not the proposed transformer’s.
+
+**Q2. Prior benchmark result?** I found **no verified report of classical local-linear/S-map analog forecasting beating TSFMs under your exact dysts/Panda zero-shot protocol**. This is a search finding, not proof of priority. [Context parroting](https://arxiv.org/html/2505.11349v3) explicitly leaves those comparisons open; its S-map discussion uses kernel averaging and acknowledges that classical S-map instead fits a local-linear model.
+
+**Q3. 5/10 — CAUTION.** Promising empirical finding; incremental method. Failed candidate transforms motivate investigating contextual adaptation but do not establish its mechanism.
+
+**Single decisive experiment:** freeze identical top-200 neighborhoods and run a system-held-out factorial comparison: distance versus learned weights × retrieval averaging versus tuned ridge local-linear regression versus your attention regressor, including ICTSP/LLA implementations. Match available history; require every candidate continuation to end before the forecast origin. Report system-level paired confidence intervals. If attention cannot beat your existing learned-weight closed-form solver, abandon the transformer novelty claim.

@@ -1,0 +1,8 @@
+[val] H512 best smap_8.0_0.01 53.201 | simplex 50.871
+[check] r-only median pat327 50.6904 vs pat321 50.6904; n 9347 9347
+[test] H512 smap_classic 48.801 simplex 49.247 smap_fc 48.405 r_only 50.690 panda 57.373
+   smap_classic-smap_fc   +0.396 [+0.104, +0.732] frac 0.348
+   smap_classic-r_only    -1.890 [-2.201, -1.547] frac 0.673
+   smap_classic-panda     -8.572 [-9.041, -8.042] frac 0.851
+   simplex-r_only         -1.443 [-1.775, -1.163] frac 0.764
+   smap_fc-panda          -8.968 [-9.481, -8.489] frac 0.858
