@@ -1,0 +1,11 @@
+[check] ctx 2048 H256: r-only 39.4547 vs PAT-325 39.4547; smap-fc lambda 0.1; classic smap_8.0_0.01
+[test] ctx 2048 H256 r_only 39.455 smap_fc 37.038 smap_classic 39.749 simplex 38.822 rope 82.575 path 63.764
+   smap_classic-path      -24.015 [-24.776, -23.317] frac 0.980
+   smap_classic-rope      -42.826 [-43.667, -42.038] frac 1.000
+   smap_fc-path           -26.726 [-27.495, -25.793] frac 0.987
+   smap_fc-rope           -45.537 [-46.504, -44.517] frac 1.000
+   r_only-path            -24.309 [-25.042, -23.585] frac 0.973
+   r_only-rope            -43.121 [-43.934, -42.172] frac 1.000
+   simplex-path           -24.942 [-25.842, -24.262] frac 0.979
+   simplex-rope           -43.754 [-44.823, -42.976] frac 0.999
+   smap_classic-smap_fc   +2.711 [+2.149, +3.190] frac 0.208
