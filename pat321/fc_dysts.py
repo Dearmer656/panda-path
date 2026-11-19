@@ -33,7 +33,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 ROOT = Path(__file__).resolve().parents[1]; sys.path.insert(0, str(ROOT))
-LQ, NSH, PATCH, T_LEN = 96, 200, 16, 4096
+LQ, NSH, PATCH, T_LEN = int(os.environ.get("P321_LQ", 96)), 200, 16, 4096   # PAT-329: query window (default 96 = PAT-321)
 CTX = int(os.environ.get('P321_CTX', 512))   # PAT-325: backbone context (512 = PAT-321; longer = length extrapolation)
 NPW = CTX // PATCH                             # patches per backbone window
 HS = (128, 256, 512)

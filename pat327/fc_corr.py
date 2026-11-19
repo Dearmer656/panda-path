@@ -30,7 +30,7 @@ import fc_dysts as FC  # noqa: E402  (data, candidates, readouts, scorer, metric
 
 OUT = ROOT / 'pat327' / 'out'
 LQ, PATCH, NZ = FC.LQ, FC.PATCH, FC.NZ
-SUB = torch.arange(LQ - 1, -1, -8).flip(0)          # 12 delay coordinates, last one = most recent step
+SUB = torch.arange(LQ - 1, -1, -max(1, LQ // 12)).flip(0)   # delay coordinates (LQ 96: every 8th step = 12, as PAT-327)
 D, HID, NPMAX = 32, 128, (FC.T_LEN - LQ) // PATCH + 1
 LAMS = (0.01, 0.1, 1.0)
 
