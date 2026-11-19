@@ -223,7 +223,7 @@ def build(se, rows, t, H):
     s = torch.where(vs, s_all[ti], t[:, None] - H).clamp_min(LQ)
     top = torch.where(vs, top, torch.zeros_like(top))
     s2 = torch.cat([s, s], 1); val = torch.cat([torch.ones_like(vs), torch.zeros_like(vs)], 1)
-    valid = torch.cat([vs, vs], 1); cs = torch.cat([top, top], 1)
+    valid = torch.cat([vs, vs & (os.environ.get('P330_VALONLY') != '1')], 1); cs = torch.cat([top, top], 1)   # PAT-329: value readouts only
     ctx_m = X.gather(1, t[:, None] - CTX + torch.arange(CTX, device=dev)[None]).mean(1)
     ctx_s = X.gather(1, t[:, None] - CTX + torch.arange(CTX, device=dev)[None]).std(1, unbiased=False).clamp_min(1e-10)
     sqf = (sq / ctx_s).clamp_min(SD_FLOOR)[:, None]
