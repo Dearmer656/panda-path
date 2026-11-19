@@ -1,0 +1,21 @@
+[test] H128 (smap lambda 0.01) test r-only sMAPE fc 34.652 pairm 34.635 pathm 34.649 smap 31.599
+   pairm-fc      -0.017 [-0.040, +0.051] frac 0.458
+   pairm-smap    +3.037 [+2.642, +3.460] frac 0.140
+   pathm-fc      -0.004 [-0.034, +0.026] frac 0.506
+   pathm-smap    +3.050 [+2.682, +3.468] frac 0.141
+   pathm-pairm   +0.014 [-0.054, +0.032] frac 0.566
+[test] H256 (smap lambda 0.01) test r-only sMAPE fc 42.956 pairm 42.963 pathm 42.983 smap 41.343
+   pairm-fc      +0.008 [-0.017, +0.061] frac 0.490
+   pairm-smap    +1.620 [+1.344, +2.053] frac 0.158
+   pathm-fc      +0.027 [-0.021, +0.086] frac 0.489
+   pathm-smap    +1.639 [+1.362, +2.089] frac 0.158
+   pathm-pairm   +0.019 [-0.019, +0.057] frac 0.499
+[test] H512 (smap lambda 0.1) test r-only sMAPE fc 50.690 pairm 50.691 pathm 50.686 smap 48.405
+   pairm-fc      +0.001 [-0.011, +0.011] frac 0.438
+   pairm-smap    +2.286 [+2.032, +2.570] frac 0.131
+   pathm-fc      -0.004 [-0.014, +0.025] frac 0.488
+   pathm-smap    +2.281 [+2.020, +2.571] frac 0.131
+   pathm-pairm   -0.005 [-0.014, +0.024] frac 0.571
+[verdict] pairm: GO=False (CI upper < 0 vs fc and smap at L128 and L512)
+[verdict] pathm: GO=False (CI upper < 0 vs fc and smap at L128 and L512)
+[verdict] path-m better than pair-m: False
