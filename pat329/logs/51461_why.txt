@@ -1,0 +1,19 @@
+== H512 (parrot D = 64); fc_top1 picks value readout 49.0%
+   arm        sMAPE    MSE     lag   lvl_gap |log_sd| dist96 agree_A
+   eu_parrot   47.65  1.363     935   0.037   0.042  0.048  1.000
+   eu96        47.75  1.353     938   0.025   0.035  0.026  0.644
+   euc96       48.87  1.393     949   0.039   0.028  0.039  0.554
+   cos96       49.25  1.411     959   0.043   0.041  0.047  0.518
+   cos96_sh    49.98  1.598     959   0.043   0.041  0.047  0.518
+   eu96_pool   47.70  1.363     938   0.026   0.035  0.027  0.635
+   fc_top1     47.93  1.414     868   0.023   0.036  0.031  0.509
+   eu_sh       48.61  1.515     935   0.037   0.042  0.048  1.000
+   eu96       - eu_parrot  sMAPE +0.11 [-0.20, +0.34] frac 0.446
+   euc96      - eu96       sMAPE +1.12 [+0.85, +1.43] frac 0.300
+   cos96      - euc96      sMAPE +0.37 [+0.17, +0.71] frac 0.348
+   cos96_sh   - cos96      sMAPE +0.73 [+0.29, +0.95] frac 0.279
+   eu96_pool  - eu96       sMAPE -0.06 [-0.22, +0.09] frac 0.125
+   fc_top1    - cos96      sMAPE -1.31 [-1.81, -1.08] frac 0.448
+   fc_top1    - cos96_sh   sMAPE -2.04 [-2.43, -1.76] frac 0.606
+   eu_sh      - eu_parrot  sMAPE +0.96 [+0.73, +1.25] frac 0.195
+   fc_top1    - eu_parrot  sMAPE +0.28 [-0.12, +0.55] frac 0.385
