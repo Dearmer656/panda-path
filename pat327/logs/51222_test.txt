@@ -1,0 +1,27 @@
+[test] H128 val r-only sMAPE fc 33.171 smap0.01 29.519 smap0.1 29.679 smap1.0 30.289 -> lambda 0.01
+[test] H128 test r-only sMAPE fc 34.652 pair 34.122 path 34.661 smap 31.599
+   pair-fc      -0.531 [-0.731, -0.369] frac 0.759
+   pair-smap    +2.523 [+2.139, +2.842] frac 0.169
+   path-fc      +0.008 [-0.037, +0.022] frac 0.478
+   path-smap    +3.062 [+2.690, +3.467] frac 0.141
+   smap-fc      -3.054 [-3.444, -2.633] frac 0.859
+   path-pair    +0.539 [+0.361, +0.732] frac 0.229
+[test] H256 val r-only sMAPE fc 40.785 smap0.01 39.489 smap0.1 39.551 smap1.0 39.604 -> lambda 0.01
+[test] H256 test r-only sMAPE fc 42.956 pair 42.868 path 42.956 smap 41.343
+   pair-fc      -0.088 [-0.242, -0.047] frac 0.738
+   pair-smap    +1.525 [+1.207, +1.929] frac 0.166
+   path-fc      +0.000 [+0.000, +0.000] frac 0.000
+   path-smap    +1.612 [+1.347, +2.066] frac 0.159
+   smap-fc      -1.612 [-2.070, -1.331] frac 0.841
+   path-pair    +0.088 [+0.049, +0.245] frac 0.262
+[test] H512 val r-only sMAPE fc 52.790 smap0.01 51.169 smap0.1 50.239 smap1.0 51.161 -> lambda 0.1
+[test] H512 test r-only sMAPE fc 50.690 pair 50.690 path 50.690 smap 48.405
+   pair-fc      +0.000 [+0.000, +0.000] frac 0.000
+   pair-smap    +2.285 [+2.032, +2.568] frac 0.132
+   path-fc      +0.000 [+0.000, +0.000] frac 0.000
+   path-smap    +2.285 [+2.023, +2.569] frac 0.132
+   smap-fc      -2.285 [-2.560, -2.024] frac 0.868
+   path-pair    +0.000 [+0.000, +0.000] frac 0.000
+[verdict] pair: GO=False (CI upper < 0 vs fc and smap at L128 and L512)
+[verdict] path: GO=False (CI upper < 0 vs fc and smap at L128 and L512)
+[verdict] path better than pair: False
