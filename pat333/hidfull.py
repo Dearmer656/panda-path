@@ -40,12 +40,13 @@ def main():
         q = torch.nonzero(d['ids'] == i)[:, 0]; order.append(q)
         rows = d['rows'][q].to(dev); t = int(d['t'][q[0]]); X = S[rows]; nc = len(q)
         w = X[:, t - 512:t]; cm, cs = w.mean(1), w.std(1, unbiased=False).clamp_min(1e-10); Z = (X - cm[:, None]) / cs[:, None]
-        ends = t - 16 * torch.arange(8, (t - 512) // 16 + 1, device=dev)                       # e <= t - 128, e >= 512
+        ends = (t - 16 * torch.arange(8, max(9, (t - 512) // 16 + 1), device=dev)).clamp(min=512)   # e <= t - 128, e >= 512 (masked)
         Lc, Mc = encode(p, X, ends); Lq, Mq = encode(p, X, torch.tensor([t], device=dev))
         dk = {'last_cos': -F.cosine_similarity(Lc, Lq, dim=-1), 'last_eu': (Lc - Lq).square().sum(-1),
               'mean_cos': -F.cosine_similarity(Mc, Mq, dim=-1), 'mean_eu': (Mc - Mq).square().sum(-1)}        # [n, C]
         for H in HS:
-            D = D_FULL[H]; ok = ends + H <= t
+            D = D_FULL[H]; ok = (ends + H <= t) & (ends >= 512) & (t - ends >= 128); has = bool(ok.any())
+            f = (d['f'][q, :H].to(dev) - cm[:, None]) / cs[:, None]
             y = Z[:, t:t + H]
             qs = Z[:, t - D:t]; Wc = Z[:, ends[:, None] - D + torch.arange(D, device=dev)]                 # [C, n, D]
             dd = dict(dk, sig=(Wc - qs[:, None]).square().mean(-1).T)
@@ -53,9 +54,9 @@ def main():
                 v = dd[k].masked_fill(~ok[:, None], float('inf'))                                          # [n, C]
                 for j, sel in (('', v.argmin(0)), ('_joint', None)):
                     if sel is None:
-                        vj = (v / v[ok].abs().mean(0, keepdim=True).clamp_min(1e-12)).sum(1) if k != 'sig' else v.sum(1)
+                        vj = ((v / v[ok].abs().mean(0, keepdim=True).clamp_min(1e-12)).sum(1) if k != 'sig' else v.sum(1)) if has else v.sum(1)
                         sel = vj.argmin().expand(nc)
-                    pr = torch.stack([Z[c, ends[sel[c]]:ends[sel[c]] + H] for c in range(nc)])
+                    pr = torch.stack([Z[c, ends[sel[c]]:ends[sel[c]] + H] for c in range(nc)]) if has else f
                     E[H][k + j]['smape'].append(((pr - y).abs() / (pr.abs() + y.abs() + 1e-10)).mean(1).cpu())
                     E[H][k + j]['mse'].append((pr - y).square().mean(1).cpu())
     o = torch.cat(order); inv = torch.empty_like(o); inv[o] = torch.arange(len(o))
