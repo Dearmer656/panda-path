@@ -16,6 +16,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 for p in ('pat327', 'pat329', 'pat330', 'pat333'): sys.path.insert(0, str(ROOT / p))
 sys.path.insert(0, str(ROOT))
+import os
 import numpy as np, torch
 import torch.nn.functional as F
 import fc_corr as C  # noqa: E402
@@ -53,10 +54,11 @@ def normed(dd, ok):
 
 
 @torch.no_grad()
-def run_set(name, p):
+def run_set(name, p, shard=None):
     d = torch.load(FC.OUT / f'{name}.pt'); S = d['S'].to(dev)
     E = {H: {} for H in HS}; order = []
-    for i in range(d['n_inst']):
+    insts = range(d['n_inst']) if shard is None else range(shard[0], d['n_inst'], shard[1])
+    for i in insts:
         q = torch.nonzero(d['ids'] == i)[:, 0]; order.append(q)
         rows = d['rows'][q].to(dev); t = int(d['t'][q[0]]); X = S[rows]; nc = len(q)
         w = X[:, t - 512:t]; cm, cs = w.mean(1), w.std(1, unbiased=False).clamp_min(1e-10); Z = (X - cm[:, None]) / cs[:, None]
@@ -114,6 +116,12 @@ def run_set(name, p):
                                     elif tau == 'best': a = F.one_hot(dns.argmin(1), len(HD)).float()
                                     else: a = torch.softmax(-dns / tau, 1)
                                     put(f'{key}_{st}_{mode}|{wn}{k}|{tau}', (a[..., None] * ph).sum(1) / a.sum(1, keepdim=True))
+    if shard is not None:
+        return {'order': torch.cat(order).cpu(), 'E': {H: {k: (torch.cat(a), torch.cat(b)) for k, (a, b) in E[H].items()} for H in HS}}
+    return finish(d, order, E)
+
+
+def finish(d, order, E):
     o = torch.cat(order); inv = torch.empty_like(o); inv[o] = torch.arange(len(o))
     return {H: {k: {'smape': per_traj(torch.cat(s)[inv], d['ids'], d['inst']), 'mse': per_traj(torch.cat(m)[inv], d['ids'], d['inst'])}
                 for k, (s, m) in E[H].items()} for H in HS}
@@ -122,10 +130,23 @@ def run_set(name, p):
 def med(x): return 100 * float(x['smape'].median())
 
 
+def merged(name, n):
+    """merge shard files out/hid_raw_{name}_{i}of{n}.pt into per-trajectory results."""
+    d = torch.load(FC.OUT / f'{name}.pt'); R = [torch.load(O / f'hid_raw_{name}_{i}of{n}.pt') for i in range(n)]
+    E = {H: {k: ([r['E'][H][k][0] for r in R], [r['E'][H][k][1] for r in R]) for k in R[0]['E'][H]} for H in HS}
+    return finish(d, [r['order'] for r in R], E)
+
+
 def main():
     O.mkdir(exist_ok=True)
-    p = FC.load_backbone(ROOT / CK['PaTH'], dev)
-    V = run_set('val', p); T = run_set('test', p)
+    sh = os.environ.get('P334_SHARD')   # 'set:i:n' -> compute one shard and save raw; 'merge:nv:nt' -> merge and report
+    if sh and not sh.startswith('merge'):
+        name, i, n = sh.split(':'); p = FC.load_backbone(ROOT / CK['PaTH'], dev)
+        torch.save(run_set(name, p, (int(i), int(n))), O / f'hid_raw_{name}_{i}of{n}.pt'); print('shard done', sh, flush=True); return
+    if sh:
+        _, nv, nt = sh.split(':'); V = merged('val', int(nv)); T = merged('test', int(nt))
+    else:
+        p = FC.load_backbone(ROOT / CK['PaTH'], dev); V = run_set('val', p); T = run_set('test', p)
     for H in HS:
         A, pick = {'f': T[H]['f']}, {}
         for key in KEYS:
