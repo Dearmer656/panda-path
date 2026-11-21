@@ -26,6 +26,11 @@ import sig as G  # noqa: E402
 from sig import FC, dev, chunks, backbone, TAG, MODE  # noqa: E402
 from mse_eval import per_traj  # noqa: E402
 O = ROOT / 'pat334' / 'out'; HS = (128, 256, 512)
+# stride ablation (defaults = original G1 run): anchors restricted to a = t - STRIDE m ('g') or a pseudo-random 1/STRIDE subset
+# ('r'); AMIN = 1 additionally requires a full 512 window before the anchor (full: a >= 512; ctx: a - 512 >= t - CTX)
+import os
+STRIDE, SUB, AMIN = int(os.environ.get('P334_STRIDE', 1)), os.environ.get('P334_SUB', 'g'), os.environ.get('P334_AMIN', '0') == '1'
+SFX = '' if (STRIDE, AMIN) == (1, False) else f'_s{STRIDE}{SUB}{"_a512" if AMIN else ""}'
 KS, KM, R, EPS, CLIP = (1, 3, 5, 10, 20), 20, 32, 1e-4, 1000.0
 TAUS = ('uni', 'best', 0.03, 0.1, 0.3, 1.0)
 FAM = {'whole': [(96, 0)], 'sharedlog': [(96, 0)], 'seg16': [(16, 16 * j) for j in range(6)],
@@ -41,6 +46,10 @@ def cand(Z, t, H, l, o, shared):
     if shared: dist = torch.log((W - q[:, None]).square().reshape(B, W.shape[1], 6, 16).mean(-1) + EPS).mean(-1)
     else: dist = (W - q[:, None]).square().mean(-1)
     ok = a[None] + H <= t[:, None]
+    if STRIDE > 1:
+        if SUB == 'g': ok &= (t[:, None] - a[None]) % STRIDE == 0
+        else: ok &= ((a[None] * 1000003 + t[:, None] * 7919) % 104729) % STRIDE == 0
+    if AMIN: ok &= (a[None] >= 512) if MODE == 'full' else (a[None] - 512 >= (t - G.CTX)[:, None])
     if MODE == 'ctx': ok &= (a - o - l)[None] >= (t - G.CTX)[:, None]
     return a, dist, ok
 
@@ -134,10 +143,11 @@ def run(H):
             A[f'{mode}_{fam}'] = T[b]; pick[f'{mode}_{fam}'] = (b, med(V[b]))
         b = min(M2F, key=lambda fm: pick[f'{mode}_{fm}'][1]); A[f'{mode}_M2'] = A[f'{mode}_{b}']; pick[f'{mode}_M2'] = pick[f'{mode}_{b}']
     hm = min('cj', key=lambda m: pick[f'{m}_M2'][1])
-    print(f'== {TAG} H{H}: headline mode = {hm}', flush=True)
+    print(f'== {TAG}{SFX} H{H}: headline mode = {hm}', flush=True)
     for k, (b, v) in pick.items(): print(f'   pick {k:13s} {b:28s} val sMAPE {v:6.2f}', flush=True)
     ext = {}
-    if MODE == 'full' and G.CTX == 512:
+    if SFX: pass
+    elif MODE == 'full' and G.CTX == 512:
         Pp = torch.load(ROOT / 'pat330' / 'out' / f'evo_pool_H{H}.pt', weights_only=False)['T']; Pb = torch.load(ROOT / 'pat330' / 'out' / f'evo_blk_H{H}.pt', weights_only=False)['T']
         ext = {'p330_A': Pp['A'], 'p330_Bl': Pp['Bl'], 'p330_C': Pb['C']}
     elif MODE == 'ctx':
@@ -153,7 +163,7 @@ def run(H):
         for met, sc in (('smape', 100), ('mse', 1)):
             d0, lo, hi, _ = G.C.boot(sc * A[x][met].numpy(), sc * A[ref][met].numpy(), rng); o.append(f'{met} {d0:+.3f} [{lo:+.3f}, {hi:+.3f}]')
         print(f'   {x:13s} - {ref:13s} ' + ' | '.join(o), flush=True)
-    torch.save({'A': A, 'pick': pick, 'hm': hm}, O / f'mh_{TAG}_H{H}.pt')
+    torch.save({'A': A, 'pick': pick, 'hm': hm}, O / f'mh_{TAG}{SFX}_H{H}.pt')
 
 
 if __name__ == '__main__':
