@@ -14,6 +14,8 @@ import fc_corr as C  # noqa: E402
 from mse_eval import per_traj  # noqa: E402
 FC = C.FC; dev = torch.device('cuda'); CTX, TR = FC.CTX, 512
 CK = {'PaTH': 'pat318/ckpt/p318ut_path_s99_st100000-0/checkpoint-final', 'RoPE': 'pat318/ckpt/p318ut_rope_s99_st100000-1/checkpoint-final'}
+# PAT-334 fix: full (multivariate, channel attention) Panda: our PaTH retrain and the released Panda (RoPE). 'PaTH'/'RoPE' above are UNIVARIATE.
+CK |= {'PaTHmv': 'pat318/ckpt/p318_path_s99_st100000-0/checkpoint-final', 'Panda': 'data/ckpt_panda'}
 
 
 @torch.no_grad()

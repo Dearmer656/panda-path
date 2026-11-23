@@ -23,6 +23,7 @@ from transformers.models.patchtst.modeling_patchtst import (
 from transformers.utils import ModelOutput
 
 from .path_pos import bidir_path_scores
+from .lie_pos import bidir_lie_scores
 from .modules import (
     DyT,
     PatchTSTKernelEmbedding,
@@ -83,12 +84,18 @@ class PatchTSTRopeAttention(nn.Module):
         super().__init__()
         # PAT-318: pos in rope | nope | path | rope_path (None -> follow use_rope, the official behaviour)
         pos = pos or ("rope" if use_rope else "nope")
-        assert pos in ("rope", "nope", "path", "rope_path", "fox", "path_fox", "mamba3", "path_shared"), pos
+        assert pos in ("rope", "nope", "path", "rope_path", "fox", "path_fox", "mamba3", "path_shared", "lie"), pos
         self.pos = pos
         use_rope = "rope" in pos
         if "path" in pos:  # PaTH: w_t, beta_t from the attention layer input (bidirectional, see path_pos.py)
             self.w_proj = nn.Linear(embed_dim, embed_dim, bias=bias)
             self.beta_proj = nn.Linear(embed_dim, num_heads, bias=bias)
+        if pos == "lie":  # PAT-336: Lie-exponential transport A_t = exp(dt_t Q_t m_t Q_t^T) (see lie_pos.py)
+            self.lie_rank = getattr(config, "lie_rank", 4) if config is not None else 4
+            r = self.lie_rank
+            self.lie_basis_proj = nn.Linear(embed_dim, embed_dim * r, bias=bias)
+            self.lie_gen_proj = nn.Linear(embed_dim, num_heads * (r * (r - 1) // 2 + r + 1), bias=True)
+            nn.init.zeros_(self.lie_gen_proj.bias)
         if "fox" in pos:  # PAT-318 control: Forgetting Transformer (Lin et al., ICLR 2025) scalar forget gate per head, no RoPE
             # (path_fox = PaTH-FoX of Yang et al. 2505.16381: Householder path scores + the same forget-gate bias)
             self.fgate_proj = nn.Linear(embed_dim, num_heads, bias=True)
@@ -214,6 +221,11 @@ class PatchTSTRopeAttention(nn.Module):
             w = nn.functional.normalize(self._shape(self.w_proj(hp), -1, bsz).view(*proj_shape), dim=-1)
             beta = 2 * torch.sigmoid(self.beta_proj(hp)).transpose(1, 2).reshape(bsz * self.num_heads, -1)
             attn_weights = bidir_path_scores(query_states, key_states, w.to(query_states.dtype), beta.to(query_states.dtype))
+        elif self.pos == "lie":
+            H, E, r = self.num_heads, self.head_dim, self.lie_rank
+            basis = self.lie_basis_proj(hidden_states).view(bsz, tgt_len, H, E, r).transpose(1, 2).reshape(bsz * H, tgt_len, E, r)
+            gen = self.lie_gen_proj(hidden_states).view(bsz, tgt_len, H, -1).transpose(1, 2).reshape(bsz * H, tgt_len, -1)
+            attn_weights = bidir_lie_scores(query_states, key_states, basis, gen)
         else:
             attn_weights = torch.bmm(query_states, key_states.transpose(1, 2))
         if "fox" in self.pos:  # bias[i, j] = sum of log f_s over the steps between j and i (bidirectional walk, as in path)
