@@ -83,7 +83,7 @@ class PatchTSTRopeAttention(nn.Module):
         super().__init__()
         # PAT-318: pos in rope | nope | path | rope_path (None -> follow use_rope, the official behaviour)
         pos = pos or ("rope" if use_rope else "nope")
-        assert pos in ("rope", "nope", "path", "rope_path", "fox", "path_fox", "mamba3"), pos
+        assert pos in ("rope", "nope", "path", "rope_path", "fox", "path_fox", "mamba3", "path_shared"), pos
         self.pos = pos
         use_rope = "rope" in pos
         if "path" in pos:  # PaTH: w_t, beta_t from the attention layer input (bidirectional, see path_pos.py)
@@ -138,8 +138,9 @@ class PatchTSTRopeAttention(nn.Module):
         attention_mask: torch.Tensor | None = None,
         layer_head_mask: torch.Tensor | None = None,
         output_attentions: bool = False,
+        path_ctx: torch.Tensor | None = None,
     ) -> tuple[torch.Tensor, torch.Tensor | None, tuple[torch.Tensor] | None]:
-        """Input shape: Batch x Time x Channel"""
+        """Input shape: Batch x Time x Channel. path_ctx (PAT-335 path_shared): input for w_t / beta_t instead of hidden_states."""
         if self.pos == "mamba3":
             return self.mamba3(hidden_states), None, None
 
@@ -209,8 +210,9 @@ class PatchTSTRopeAttention(nn.Module):
             )
 
         if "path" in self.pos:
-            w = nn.functional.normalize(self._shape(self.w_proj(hidden_states), -1, bsz).view(*proj_shape), dim=-1)
-            beta = 2 * torch.sigmoid(self.beta_proj(hidden_states)).transpose(1, 2).reshape(bsz * self.num_heads, -1)
+            hp = hidden_states if path_ctx is None else path_ctx
+            w = nn.functional.normalize(self._shape(self.w_proj(hp), -1, bsz).view(*proj_shape), dim=-1)
+            beta = 2 * torch.sigmoid(self.beta_proj(hp)).transpose(1, 2).reshape(bsz * self.num_heads, -1)
             attn_weights = bidir_path_scores(query_states, key_states, w.to(query_states.dtype), beta.to(query_states.dtype))
         else:
             attn_weights = torch.bmm(query_states, key_states.transpose(1, 2))
@@ -397,11 +399,19 @@ class PatchTSTEncoderLayerWithRope(nn.Module):
             batch_size * num_input_channels, sequence_length, d_model
         )
 
+        shared = getattr(self.temporal_self_attn, "pos", "") == "path_shared"
+
+        def pooled(h):  # PAT-335: channel-mean of the attention input -> one shared PaTH transport per (sample, patch)
+            m = h.view(batch_size, num_input_channels, sequence_length, d_model).mean(1, keepdim=True)
+            return m.expand(-1, num_input_channels, -1, -1).reshape(batch_size * num_input_channels, sequence_length, d_model)
+
         if self.pre_norm:
             ## Norm and Multi-Head attention and Add residual connection
+            hn = self.norm_sublayer1(hidden_state)
             attn_output, attn_weights, _ = self.temporal_self_attn(
-                hidden_states=self.norm_sublayer1(hidden_state),
+                hidden_states=hn,
                 output_attentions=output_attentions,
+                path_ctx=pooled(hn) if shared else None,
             )
             # Add: residual connection with residual dropout
             hidden_state = hidden_state + self.dropout_path1(attn_output)
@@ -410,6 +420,7 @@ class PatchTSTEncoderLayerWithRope(nn.Module):
             attn_output, attn_weights, _ = self.temporal_self_attn(
                 hidden_states=hidden_state,
                 output_attentions=output_attentions,
+                path_ctx=pooled(hidden_state) if shared else None,
             )
             # hidden_states: [(bs*num_channels) x sequence_length x d_model]
             hidden_state = self.norm_sublayer1(
