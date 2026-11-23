@@ -15,7 +15,7 @@ Criteria (fixed before results), headline ctx2048:
   D1 : ens - chr  crps CI < 0 at all H        D2 : ens - f  crps CI < 0 at all H
   D3 : ens - f and ens - chr  spec CI < 0 at all H
   reported: clim, vpt, ctx512 full.
-usage: same env as mh.py + P334_H"""
+usage: same env as mh.py + P334_H; robustness: P334_KEY (fixed config for all H), P334_K (fixed k), P334_SFX (output suffix)"""
 import os, sys
 from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
@@ -113,11 +113,11 @@ def futs_n(Z, js, H):
 
 
 def run(H):
-    pk = torch.load(O / f'mh_{TAG}_H{H}.pt', weights_only=False); hm = pk['hm']; key = pk['pick'][f'{hm}_M2'][0]; cfg = parse(key)
+    pk = torch.load(O / f'mh_{TAG}_H{H}.pt', weights_only=False); hm = pk['hm']; key = os.environ.get('P334_KEY') or pk['pick'][f'{hm}_M2'][0]; cfg = parse(key)
     assert cfg[1] != 'sharedlog'
     cf = O / f'chronos_{TAG}_test.pt'; chr_s = torch.load(cf)['samples'] if cf.exists() else None
     V = run_set('val', H, cfg); T = run_set('test', H, cfg, chr_s)
-    kb = min(KK, key=lambda k: float(V[f'ens{k}']['crps'].median()))
+    kb = int(os.environ['P334_K']) if os.environ.get('P334_K') else min(KK, key=lambda k: float(V[f'ens{k}']['crps'].median()))
     A = {'ens': T[f'ens{kb}'], 'clim': T['clim'], 'f': T['f']}
     if 'chr' in T: A['chr'] = T['chr']
     print(f'== {TAG} ens H{H}: M2 = {key}; k = {kb} (val crps ' + ' '.join(f'{k}:{float(V[f"ens{k}"]["crps"].median()):.4f}' for k in KK) + ')', flush=True)
@@ -126,7 +126,7 @@ def run(H):
     for r in refs:
         o = [f'{nm} %+.4f [%+.4f, %+.4f]' % G.C.boot(A['ens'][nm].numpy(), A[r][nm].numpy(), rng)[:3] for nm in ('crps', 'spec', 'vpt')]
         print(f'   ens - {r:5s} ' + ' | '.join(o), flush=True)
-    torch.save({'A': A, 'k': kb, 'M2': key}, O / f'ens_{TAG}_H{H}.pt')
+    torch.save({'A': A, 'k': kb, 'M2': key}, O / f'ens_{TAG}_H{H}{os.environ.get("P334_SFX", "")}.pt')
 
 
 if __name__ == '__main__':
