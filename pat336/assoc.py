@@ -6,7 +6,7 @@ import sys, ast, numpy as np, pandas as pd
 from scipy.stats import spearmanr
 cf, ck, ctx, ed = sys.argv[1:5]; L = int(sys.argv[5]) if len(sys.argv) > 5 else 128
 df = pd.read_csv(cf); df = df[(df.ckpt == ck) & (df.ctx == int(ctx))]
-ev = pd.read_csv(f'{ed}/metrics_pred{L}.csv'); sm = {r.System: float(np.median(ast.literal_eval(r.smape))) for r in ev.itertuples()}
+ev = pd.read_csv(f'{ed}/metrics_pred{L}.csv'); sc = "System" if "System" in ev.columns else "system"; sm = {s: float(np.median(ast.literal_eval(v))) for s, v in zip(ev[sc], ev["smape"])}
 df = df[df.system.isin(sm)]; print(f'{ck} ctx{ctx} L{L}: {df.system.nunique()} systems matched')
 def rep(g, tag):
     a = g.groupby('system')[['comm_n', 'comm_pn']].mean(); y = [sm[s] for s in a.index]
