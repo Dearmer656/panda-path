@@ -8,6 +8,7 @@
 #SBATCH --cpus-per-task=32
 #SBATCH --mem=240G
 #SBATCH --time=8-00:00:00
+#SBATCH --exclude=elm11,elm12,elm13,elm14,elm15,elm21,elm22,elm23,elm24,elm25,elm26,elm74,elm41,elm42,elm53,elm55
 # PAT-336 lie (Lie-exponential transport, rank 4, transpose convention, Gram-Schmidt), official recipe as p318_path_s99
 # (global batch 4096 = 4 GPUs x 256 x grad-accum 4, 100k steps, seed 99, checkpoints 50k / 100k); then ls99 eval at ctx 512 / 1024 / 2048.
 # bench (1 x 3090, 128/device): path 0.28 s/it, lie r4 1.22 s/it -> expected ~4-5 s/step here, ~5 days.

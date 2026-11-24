@@ -6,6 +6,7 @@
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=60G
 #SBATCH --time=12:00:00
+#SBATCH --exclude=elm11,elm12,elm13,elm14,elm15,elm21,elm22,elm23,elm24,elm25,elm26,elm74,elm41,elm42,elm53,elm55
 # official eval (load seed 99) of one checkpoint at ctx 512 only. usage: sbatch pat336/eval512.sbatch CKPT NAME
 CK=$1; NAME=$2; echo "ckpt $CK"; [ -d "$CK" ] || exit 1
 cd /project/nlp-work5/hongyu-s/state_path_attn/panda

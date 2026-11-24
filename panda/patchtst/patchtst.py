@@ -313,10 +313,15 @@ class PatchTSTEncoderLayerWithRope(nn.Module):
     PatchTST encoder layer with rope positional embeddings
     """
 
-    def __init__(self, config: PatchTSTConfig):
+    def __init__(self, config: PatchTSTConfig, layer_idx: int = 0):
         super().__init__()
 
         self.channel_attention = config.channel_attention
+        # PAT-338: temporal_pos = rope1_<pos> / nope1_<pos>: layer 0 uses RoPE / NoPE, layers >= 1 use <pos>
+        # (layer 0's temporal attention runs before any channel attention, so its tokens carry one channel only)
+        tpos = getattr(config, "temporal_pos", "rope")
+        if tpos.startswith(("rope1_", "nope1_")):
+            tpos = tpos[:4] if layer_idx == 0 else tpos[6:]
         # Multi-Head attention
         self.temporal_self_attn = PatchTSTRopeAttention(
             embed_dim=config.d_model,
@@ -325,7 +330,7 @@ class PatchTSTEncoderLayerWithRope(nn.Module):
             use_rope=True,
             max_wavelength=config.max_wavelength,
             rope_percent=config.rope_percent,
-            pos=getattr(config, "temporal_pos", "rope"),
+            pos=tpos,
         )
         if self.channel_attention:
             self.channel_self_attn = PatchTSTRopeAttention(
@@ -546,7 +551,7 @@ class PatchTSTEncoder(PatchTSTPreTrainedModel):
         else:
             self.layers = nn.ModuleList(
                 [
-                    PatchTSTEncoderLayerWithRope(config)
+                    PatchTSTEncoderLayerWithRope(config, layer_idx=i)
                     for i in range(config.num_hidden_layers)
                 ]
             )

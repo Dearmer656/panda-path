@@ -6,6 +6,7 @@
 #SBATCH --cpus-per-task=32
 #SBATCH --mem=120G
 #SBATCH --time=4-04:00:00
+#SBATCH --exclude=elm11,elm12,elm13,elm14,elm15,elm21,elm22,elm23,elm24,elm25,elm26,elm74,elm41,elm42,elm53,elm55
 # PAT-337 path2: bidirectional PaTH with separate reflections (w, beta) for the anticausal walk, single softmax.
 # Official recipe as p318_path_s99 (global batch 4096 = 4 x 3090 x 128 x grad-accum 8, 100k steps, seed 99, ckpt 50k / 100k);
 # then ls99 eval at ctx 512 / 1024 / 2048.
