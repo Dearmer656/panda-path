@@ -41,6 +41,19 @@ from panda.utils.train_utils import (
 logger = logging.getLogger(__name__)
 
 
+
+class SaveAtStepsCallback(transformers.TrainerCallback):
+    """Extra checkpoints at fixed steps (env P318_SAVE_AT, comma-separated), on top of save_steps."""
+
+    def __init__(self, steps):
+        self.steps = set(steps)
+
+    def on_step_end(self, args, state, control, **kwargs):
+        if state.global_step in self.steps:
+            control.should_save = True
+        return control
+
+
 class CustomTrainer(Trainer):
     def __init__(
         self,
@@ -296,6 +309,11 @@ def main(cfg):
         )
     else:
         trainer = Trainer(model=model, args=training_args, train_dataset=shuffled_train_dataset)
+
+    _save_at = [int(x) for x in os.environ.get("P318_SAVE_AT", "").split(",") if x.strip()]
+    if _save_at:
+        trainer.add_callback(SaveAtStepsCallback(_save_at))
+        log_on_main(f"Extra checkpoints at steps {_save_at}", logger)
 
     log_on_main("Training", logger)
 

@@ -7,6 +7,8 @@ NG=$(echo "$GPUS" | tr ',' '\n' | wc -l)
 PORT=$((29500 + RANDOM % 2000))
 export WANDB_MODE=disabled PYTHONWARNINGS=ignore OMP_NUM_THREADS=4
 ulimit -n 99999
+# PAT-338: intermediate checkpoints for quick analysis (5k, then every 10k); override with P318_SAVE_AT=
+export P318_SAVE_AT=${P318_SAVE_AT-5000,10000,20000,30000,40000,50000,60000,70000,80000,90000}
 CUDA_VISIBLE_DEVICES=$GPUS .venv/bin/torchrun --nproc-per-node $NG --master-port $PORT scripts/panda/train.py \
     run_name=${P318_PREFIX:-p318}_${ARM}_s${SEED}_st${STEPS} \
     wandb.log=false \
