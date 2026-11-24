@@ -85,12 +85,15 @@ class PatchTSTRopeAttention(nn.Module):
         super().__init__()
         # PAT-318: pos in rope | nope | path | rope_path (None -> follow use_rope, the official behaviour)
         pos = pos or ("rope" if use_rope else "nope")
-        assert pos in ("rope", "nope", "path", "rope_path", "fox", "path_fox", "mamba3", "path_shared", "lie"), pos
+        assert pos in ("rope", "nope", "path", "rope_path", "fox", "path_fox", "mamba3", "path_shared", "lie", "path2"), pos
         self.pos = pos
         use_rope = "rope" in pos
         if "path" in pos:  # PaTH: w_t, beta_t from the attention layer input (bidirectional, see path_pos.py)
             self.w_proj = nn.Linear(embed_dim, embed_dim, bias=bias)
             self.beta_proj = nn.Linear(embed_dim, num_heads, bias=bias)
+        if pos == "path2":  # PAT-337: separate reflections for the anticausal walk (names avoid 'beta': HF renames it)
+            self.path_wb_proj = nn.Linear(embed_dim, embed_dim, bias=bias)
+            self.path_sb_proj = nn.Linear(embed_dim, num_heads, bias=bias)
         if pos == "lie":  # PAT-336: Lie-exponential transport A_t = exp(dt_t Q_t m_t Q_t^T) (see lie_pos.py)
             self.lie_rank = int(os.environ.get("P336_LIE_RANK", 4))  # config is not passed to the temporal attention
             r = self.lie_rank
@@ -221,7 +224,11 @@ class PatchTSTRopeAttention(nn.Module):
             hp = hidden_states if path_ctx is None else path_ctx
             w = nn.functional.normalize(self._shape(self.w_proj(hp), -1, bsz).view(*proj_shape), dim=-1)
             beta = 2 * torch.sigmoid(self.beta_proj(hp)).transpose(1, 2).reshape(bsz * self.num_heads, -1)
-            attn_weights = bidir_path_scores(query_states, key_states, w.to(query_states.dtype), beta.to(query_states.dtype))
+            wb = bb = None
+            if self.pos == "path2":
+                wb = nn.functional.normalize(self._shape(self.path_wb_proj(hp), -1, bsz).view(*proj_shape), dim=-1).to(query_states.dtype)
+                bb = (2 * torch.sigmoid(self.path_sb_proj(hp)).transpose(1, 2).reshape(bsz * self.num_heads, -1)).to(query_states.dtype)
+            attn_weights = bidir_path_scores(query_states, key_states, w.to(query_states.dtype), beta.to(query_states.dtype), wb, bb)
         elif self.pos == "lie":
             H, E, r = self.num_heads, self.head_dim, self.lie_rank
             basis = self.lie_basis_proj(hidden_states).view(bsz, tgt_len, H, r, E).transpose(1, 2).reshape(bsz * H, tgt_len, r, E)

@@ -25,9 +25,13 @@ def causal_path_scores(q: torch.Tensor, k: torch.Tensor, w: torch.Tensor, beta: 
     return (q @ k.transpose(1, 2)).tril() - qw @ X
 
 
-def bidir_path_scores(q: torch.Tensor, k: torch.Tensor, w: torch.Tensor, beta: torch.Tensor) -> torch.Tensor:
-    """q, k, w: [B, N, E]; beta: [B, N]. Full non-causal PaTH score matrix [B, N, N]."""
+def bidir_path_scores(q: torch.Tensor, k: torch.Tensor, w: torch.Tensor, beta: torch.Tensor,
+                      wb: torch.Tensor | None = None, bb: torch.Tensor | None = None) -> torch.Tensor:
+    """q, k, w: [B, N, E]; beta: [B, N]. Full non-causal PaTH score matrix [B, N, N].
+    PAT-337 path2: wb / bb (same shapes) = separate reflections for the anticausal walk (j > i):
+    S[i, j] = q_i^T Hb_{i+1} ... Hb_j k_j; None -> the forward ones (original PaTH)."""
     S_c = causal_path_scores(q, k, w, beta)
+    if wb is not None: w, beta = wb, bb
     qr, kr = q.flip(1), k.flip(1)
     wr = torch.cat([w[:, :1], w.flip(1)[:, :-1]], 1)                         # w'_t' = w_{N-t'} for t' >= 1
     br = torch.cat([torch.zeros_like(beta[:, :1]), beta.flip(1)[:, :-1]], 1)  # beta'_0 = 0 (unused)
