@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 
+import os
 import torch
 import torch.nn as nn
 from transformers import PatchTSTConfig, PatchTSTPreTrainedModel
@@ -91,7 +92,7 @@ class PatchTSTRopeAttention(nn.Module):
             self.w_proj = nn.Linear(embed_dim, embed_dim, bias=bias)
             self.beta_proj = nn.Linear(embed_dim, num_heads, bias=bias)
         if pos == "lie":  # PAT-336: Lie-exponential transport A_t = exp(dt_t Q_t m_t Q_t^T) (see lie_pos.py)
-            self.lie_rank = getattr(config, "lie_rank", 4) if config is not None else 4
+            self.lie_rank = int(os.environ.get("P336_LIE_RANK", 4))  # config is not passed to the temporal attention
             r = self.lie_rank
             self.lie_basis_proj = nn.Linear(embed_dim, embed_dim * r, bias=bias)
             self.lie_gen_proj = nn.Linear(embed_dim, num_heads * (r * (r - 1) // 2 + r + 1), bias=True)
@@ -223,7 +224,7 @@ class PatchTSTRopeAttention(nn.Module):
             attn_weights = bidir_path_scores(query_states, key_states, w.to(query_states.dtype), beta.to(query_states.dtype))
         elif self.pos == "lie":
             H, E, r = self.num_heads, self.head_dim, self.lie_rank
-            basis = self.lie_basis_proj(hidden_states).view(bsz, tgt_len, H, E, r).transpose(1, 2).reshape(bsz * H, tgt_len, E, r)
+            basis = self.lie_basis_proj(hidden_states).view(bsz, tgt_len, H, r, E).transpose(1, 2).reshape(bsz * H, tgt_len, r, E)
             gen = self.lie_gen_proj(hidden_states).view(bsz, tgt_len, H, -1).transpose(1, 2).reshape(bsz * H, tgt_len, -1)
             attn_weights = bidir_lie_scores(query_states, key_states, basis, gen)
         else:
