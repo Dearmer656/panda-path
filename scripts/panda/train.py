@@ -244,6 +244,23 @@ def main(cfg):
         pretained_checkpoint=cfg.patchtst.pretrained_pft_path,
     )
 
+    # PAT-341: warm start from a trained checkpoint (env P341_INIT_FROM = ckpt dir). Exact key names (no HF beta->bias
+    # rename); only the transport projections new to this arm (w_proj / beta_proj) may be missing. beta_proj starts at
+    # weight 0, bias P341_BETA_BIAS (default -3: beta = 2 sigmoid(-3) = 0.095, near identity), w_proj keeps its default init.
+    _init = os.environ.get("P341_INIT_FROM")
+    if _init:
+        from safetensors.torch import load_file
+        sd = load_file(os.path.join(_init, "model.safetensors"))
+        missing, unexpected = model.load_state_dict(sd, strict=False)
+        assert not unexpected, unexpected
+        assert all(k.endswith(("w_proj.weight", "w_proj.bias", "beta_proj.weight", "beta_proj.bias")) for k in missing), missing
+        bb = float(os.environ.get("P341_BETA_BIAS", "-3"))
+        for name, mod in model.named_modules():
+            if name.endswith("beta_proj") and any(k.startswith(name + ".") or ("." + name + ".") in ("." + k) for k in missing):  # only NEW beta_proj
+                torch.nn.init.zeros_(mod.weight)
+                if mod.bias is not None: torch.nn.init.constant_(mod.bias, bb)
+        log_on_main(f"PAT-341 warm start from {_init}: {len(sd)} tensors loaded, {len(missing)} new: {sorted(set(k.split('.')[-2] for k in missing))}", logger)
+
     trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
     log_on_main(f"Total trainable parameters: {trainable_params:,}", logger)
 

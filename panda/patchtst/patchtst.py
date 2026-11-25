@@ -234,7 +234,18 @@ class PatchTSTRopeAttention(nn.Module):
             H, E, r = self.num_heads, self.head_dim, self.lie_rank
             basis = self.lie_basis_proj(hidden_states).view(bsz, tgt_len, H, r, E).transpose(1, 2).reshape(bsz * H, tgt_len, r, E)
             gen = self.lie_gen_proj(hidden_states).view(bsz, tgt_len, H, -1).transpose(1, 2).reshape(bsz * H, tgt_len, -1)
-            attn_weights = bidir_lie_scores(query_states, key_states, basis, gen, self.lie_mode)
+            # PAT-342 eval-only interventions (env P342_LIE_INTV, unset in training): k0 (K = 0), s0 (Lambda = 0), id (A_t = I),
+            # perm (one fixed random permutation of the step order t = 1..N-1, applied jointly to basis and gen, i.e. Q, K, Lambda, dt)
+            intv = os.environ.get("P342_LIE_INTV", "")
+            mode = {"k0": "s", "s0": "k"}.get(intv, self.lie_mode)  # meant for the ks checkpoint
+            if intv == "perm":
+                g = torch.Generator().manual_seed(int(os.environ.get("P342_PERM_SEED", 0)))
+                pi = torch.cat([torch.zeros(1, dtype=torch.long), 1 + torch.randperm(tgt_len - 1, generator=g)]).to(basis.device)
+                basis, gen = basis[:, pi], gen[:, pi]
+            if intv == "id":
+                attn_weights = torch.bmm(query_states, key_states.transpose(1, 2))
+            else:
+                attn_weights = bidir_lie_scores(query_states, key_states, basis, gen, mode)
         else:
             attn_weights = torch.bmm(query_states, key_states.transpose(1, 2))
         if "fox" in self.pos:  # bias[i, j] = sum of log f_s over the steps between j and i (bidirectional walk, as in path)
