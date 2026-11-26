@@ -85,7 +85,7 @@ class PatchTSTRopeAttention(nn.Module):
         super().__init__()
         # PAT-318: pos in rope | nope | path | rope_path (None -> follow use_rope, the official behaviour)
         pos = pos or ("rope" if use_rope else "nope")
-        assert pos in ("rope", "nope", "path", "rope_path", "fox", "path_fox", "mamba3", "path_shared", "lie", "lie_s", "lie_k", "path2"), pos
+        assert pos in ("rope", "nope", "path", "rope_path", "fox", "path_fox", "mamba3", "path_shared", "lie", "lie_s", "lie_k", "lie_fox", "path2"), pos
         self.pos = pos
         use_rope = "rope" in pos
         if "path" in pos:  # PaTH: w_t, beta_t from the attention layer input (bidirectional, see path_pos.py)
@@ -95,7 +95,7 @@ class PatchTSTRopeAttention(nn.Module):
             self.path_wb_proj = nn.Linear(embed_dim, embed_dim, bias=bias)
             self.path_sb_proj = nn.Linear(embed_dim, num_heads, bias=bias)
         if pos.startswith("lie"):  # PAT-336: Lie-exponential transport A_t = exp(Q_t^T m_t Q_t) (see lie_pos.py); lie_s: K = 0, lie_k: lambda = 0
-            self.lie_mode = {"lie": "ks", "lie_s": "s", "lie_k": "k"}[pos]
+            self.lie_mode = {"lie": "ks", "lie_s": "s", "lie_k": "k", "lie_fox": "ks"}[pos]  # lie_fox: KS transport + FoX forget-gate bias
             self.lie_rank = int(os.environ.get("P336_LIE_RANK", 4))  # config is not passed to the temporal attention
             r = self.lie_rank
             self.lie_basis_proj = nn.Linear(embed_dim, embed_dim * r, bias=bias)
