@@ -251,6 +251,10 @@ class PatchTSTRopeAttention(nn.Module):
         if "fox" in self.pos:  # bias[i, j] = sum of log f_s over the steps between j and i (bidirectional walk, as in path)
             c = torch.cumsum(nn.functional.logsigmoid(self.fgate_proj(hidden_states).float()).transpose(1, 2).reshape(bsz * self.num_heads, -1), -1)
             attn_weights = attn_weights + (-(c[:, :, None] - c[:, None, :]).abs()).to(attn_weights.dtype)
+        win = int(os.environ.get("P342_WIN", 0) or 0)  # PAT-342 eval-only: transport layers attend only to |i - j| <= win (unset in training)
+        if win > 0 and (self.pos.startswith("lie") or "path" in self.pos):
+            ii = torch.arange(tgt_len, device=attn_weights.device)
+            attn_weights = attn_weights.masked_fill((ii[:, None] - ii[None]).abs() > win, float("-inf"))
 
         if attn_weights.size() != (bsz * self.num_heads, tgt_len, src_len):
             raise ValueError(
@@ -959,7 +963,8 @@ class PatchTSTPredictionHead(nn.Module):
         else:
             if self.pooling_type == "mean":
                 # pooled_embedding: [bs x num_channels x d_model]
-                pooled_embedding = embedding.mean(dim=2)
+                nl = int(os.environ.get("P342_POOL_LAST", 0) or 0)  # PAT-342 eval-only: mean over the last nl patches only (unset in training)
+                pooled_embedding = (embedding[:, :, -nl:] if nl > 0 else embedding).mean(dim=2)
             elif self.pooling_type == "last":
                 # PAT-318 LSTM control: final recurrent state
                 pooled_embedding = embedding[:, :, -1, :]
